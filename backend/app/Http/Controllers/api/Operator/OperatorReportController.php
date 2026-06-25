@@ -1,0 +1,1597 @@
+<?php
+
+namespace App\Http\Controllers\api\Operator;
+
+use App\Http\Controllers\Controller;
+use App\Models\ComplainDetails;
+use App\Models\Complaint;
+use App\Models\ComplainDocuments;
+use App\Models\OldComplaintsData;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use App\Models\Role;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Validator;
+use RecursiveIteratorIterator;
+use RecursiveDirectoryIterator;
+
+class OperatorReportController extends Controller
+{
+      public function complainReports()
+    {
+        // $user_id = Auth::id();
+        // if (empty($user_id)) {
+        //    return response()->json([
+        //         'status' => false,
+        //         'errors' => 'User id not found'
+        //     ], 422);
+        // }
+        $role_id = 'all';
+        // $districtId = $district_id = auth()->user()->district_id ? auth()->user()->district_id : '';
+        //dd($roleid);
+        $districtId = request()->query('district') ?? null;
+        $search = request()->query('search') ?? null;
+        // $complaintype = request()->query('complaintype') ?? null;
+        // $department = request()->query('department') ?? null;
+        // $subject = request()->query('subject') ?? null;
+        // $designation = request()->query('designation') ?? null;
+        $roleid = request()->query('des') ?? 'all';
+        $status = request()->query('status') ?? '';
+       
+        $districtData = DB::table('district_master_new')->orderBy('district_name')->get();
+        // $departments = DB::table('departments')
+        //     ->select('name', 'name_hi')
+        //     ->orderBy('name')
+        //     ->get();
+        // $designations = DB::table('designations')
+        //    ->select('name', 'name_hi')
+        //     ->orderBy('name')
+        //     ->get();
+        // $complaintypes = DB::table('complaintype')
+        //      ->select('name', 'name_hi')
+        //     ->orderBy('name')
+        //     ->get();
+        // $subjects = DB::table('subjects')
+        //      ->select('name', 'name_hi')
+        //     ->orderBy('name')
+        //     ->get();
+        // $records = DB::table('complaints')
+        // ->leftJoin('complaints_details as cd', 'complaints.id', '=', 'cd.complain_id')
+        //     ->leftJoin('district_master_new as dd', DB::raw("complaints.district_id"), '=', DB::raw("dd.district_code"))
+        //     ->leftJoin('departments as dp', DB::raw("cd.department_id"), '=', DB::raw("dp.id"))
+        //     ->leftJoin('designations as ds', DB::raw("cd.designation_id"), '=', DB::raw("ds.id"))
+        //     ->leftJoin('complaintype as ct', DB::raw("cd.complaintype_id"), '=', DB::raw("ct.id"))
+        //     ->leftJoin('subjects as sub', DB::raw("cd.department_id"), '=', DB::raw("sub.id"))
+            
+        //     ->select(
+        //         'complaints.*',
+        //         'dd.district_name as district_name',
+        //         'dp.name as department_name',
+        //         'ds.name as designation_name',
+        //         'ct.name as complaintype_name',
+        //         'sub.name as subject_name',
+        //         // 'cd.*'
+        //     );
+        $records = DB::table('complaints')
+    ->leftJoin('complaints_details as cd', 'complaints.id', '=', 'cd.complain_id')
+    ->leftJoin('district_master_new as dd', 'complaints.district_id', '=', 'dd.district_code')
+    ->leftJoin('departments as dp', 'cd.department_id', '=', 'dp.id')
+    ->leftJoin('designations as ds', 'cd.designation_id', '=', 'ds.id')
+    ->leftJoin('complaintype as ct', 'cd.complaintype_id', '=', 'ct.id')
+    ->leftJoin('subjects as sub', 'cd.subject_id', '=', 'sub.id')
+    ->select(
+        'complaints.id',
+        'complaints.complain_no',
+        'complaints.name',
+        'complaints.status',
+        'complaints.created_at',
+        'dd.district_name as district_name',
+        'dd.district_code as district_id',
+        'ds.name as designation_name',
+
+        // Concatenate multiple related fields
+        DB::raw("GROUP_CONCAT(DISTINCT dp.name SEPARATOR ', ') as department_name"),
+        DB::raw("GROUP_CONCAT(DISTINCT ds.name SEPARATOR ', ') as designation_name"),
+        DB::raw("GROUP_CONCAT(DISTINCT ct.name SEPARATOR ', ') as complaintype_name"),
+        DB::raw("GROUP_CONCAT(DISTINCT sub.name SEPARATOR ', ') as subject_name")
+    );
+ 
+
+        if (!empty($districtId)) {
+            $records->where('complaints.district_id', $districtId);
+        }
+
+   
+        if (!empty($status)) {
+      
+            $records->where('complaints.status', $status);
+        }
+        
+        if (!empty($search)) {
+            $records->where(function ($q) use ($search) {
+                $q->where('complaints.complain_no', 'like', "%{$search}%")
+                ->orWhere('complaints.name', 'like', "%{$search}%")
+                ->orWhere('complaints.mobile', 'like', "%{$search}%");
+            });
+        }
+        // if ($departments) {
+        //     $records->where('complaints.department_id', $department);
+        // }
+        // if ($designations) {
+        //     $records->where('complaints.designation_id', $designation);
+        // }
+        // if ($complaintypes) {
+        //     $records->where('complaints.complaintype_id', $complaintype);
+        // }
+        // if ($subjects) {
+        //     $records->where('complaints.subject_id', $subject);
+        // }
+        // if (!empty($roleid) && $roleid == '7') {
+        //     $records->where('complaints.approved_rejected_by_ri', $status);
+        //     $records->where('complaints.approved_rejected_by_naibtahsildar', 0);
+        //     $records->where('complaints.approved_rejected_by_tahsildar', 0);
+        //     $records->where('complaints.approved_rejected_by_sdm', 0);
+        //     $records->where('complaints.approved_rejected_by_adm', 0);
+        // }
+        // if (!empty($roleid) && $roleid == '8') {
+        //     $records->where('complaints.approved_rejected_by_ri', 1);
+        //     $records->where('complaints.approved_rejected_by_naibtahsildar', $status);
+        //     $records->where('complaints.approved_rejected_by_tahsildar', 0);
+        //     $records->where('complaints.approved_rejected_by_sdm', 0);
+        //     $records->where('complaints.approved_rejected_by_adm', 0);
+        // }
+        // if (!empty($roleid) && $roleid == '9') {
+        //     $records->where('complaints.approved_rejected_by_ri', 1);
+        //     $records->where('complaints.approved_rejected_by_naibtahsildar', 1);
+        //     $records->where('complaints.approved_rejected_by_tahsildar', $status);
+        //     $records->where('complaints.approved_rejected_by_sdm', 0);
+        //     $records->where('complaints.approved_rejected_by_adm', 0);
+        // }
+        // if (!empty($roleid) && $roleid == '10') {
+        //     $records->where('complaints.approved_rejected_by_ri', 1);
+        //     $records->where('complaints.approved_rejected_by_naibtahsildar', 1);
+        //     $records->where('complaints.approved_rejected_by_tahsildar', 1);
+        //     $records->where('complaints.approved_rejected_by_sdm', $status);
+        //     $records->where('complaints.approved_rejected_by_adm', 0);
+        // }
+        // if (!empty($roleid) && $roleid == '11') {
+        //     $records->where('complaints.approved_rejected_by_ri', 1);
+        //     $records->where('complaints.approved_rejected_by_naibtahsildar', 1);
+        //     $records->where('complaints.approved_rejected_by_tahsildar', 1);
+        //     $records->where('complaints.approved_rejected_by_sdm', 1);
+        //     $records->where('complaints.approved_rejected_by_adm', $status);
+        // }
+        // dd($records->toSql());
+        $records = $records
+           ->groupBy(
+        'complaints.id',
+        'complaints.name',
+        'dd.district_name',
+        'complaints.complain_no',
+        'complaints.created_at',
+        'complaints.status',
+        'dd.district_code',
+        'ds.name',
+    )
+     ->where('in_draft','0')
+        ->get();
+        // return json_encode($records->toSql());
+        // $records = $records->paginate(50);
+        // $roles = Role::whereNotIn('id', [5, 6])->get();
+        // dd($roles);
+        // dd($districtData);
+        if($records){
+            
+            return response()->json([
+               'status' => true,
+               'message' => 'Records Fetch successfully',
+               'data' => $records,
+           ]);
+        }else{
+            return response()->json([
+               'status' => false,
+               'message' => 'No Records Found',
+           ]);
+        }
+      
+    }
+
+       public function allComplains(){
+
+        //    $query = DB::table('complaints');
+        //   $complainDetails = $query->count();
+        // dd($deadpersondetails);
+
+       $complainDetails =  DB::table('complaints as cm')
+                ->select(
+                    DB::raw('COUNT(cm.id) as total_complaints'),
+                    DB::raw("SUM(CASE WHEN cm.approved_rejected_by_ro = '1'  THEN 1 ELSE 0 END) as total_approved"),
+                    DB::raw("SUM(CASE WHEN cm.approved_rejected_by_ro = '0' THEN 1 ELSE 0 END) as total_pending"),
+                    DB::raw("SUM(CASE WHEN cm.status = 'Rejected' THEN 1 ELSE 0 END) as total_rejected")
+                )
+                 ->where('in_draft','0')
+                ->first();
+            
+           
+
+          return response()->json([
+               'status' => true,
+               'message' => 'Records Fetch successfully',
+               'data' => $complainDetails,
+           ]);
+    }
+ public function viewComplaint($id)
+  {
+   
+    $complainDetails = DB::table('complaints as cm')
+
+    ->leftJoin('district_master_new as ddn', 'cm.correspondence_district', '=', 'ddn.district_code')
+  
+    // MAIN COMPLAINANT ONLY
+    ->leftJoin('complainants as cpt', function ($join) {
+        $join->on('cm.id', '=', 'cpt.complaint_id')
+             ->where('cpt.is_main', 1);
+    })
+
+    // MAIN RESPONDENT ONLY
+    ->leftJoin('respondents as r', function ($join) {
+        $join->on('cm.id', '=', 'r.complaint_id')
+             ->where('r.is_main', 1);
+    })
+  ->leftJoin('district_master_new as dmc', 'cpt.permanent_district', '=', 'dmc.district_code')
+    ->leftJoin('district_master_new as rmc', 'r.respondent_district', '=', 'rmc.district_code')
+
+    ->leftJoin('complaint_actions as ca', 'cm.id', '=', 'ca.complaint_id')
+
+    ->select(
+        'cm.*',
+        'ddn.district_name as correspondence_district',
+
+        // main complainant
+        'cpt.complainant_name as main_complainant_name',
+        'cpt.relation_with_person as main_relation_with_person',
+        'cpt.father_name as main_complainant_father',
+        'dmc.district_name as main_complainant_district',
+        'rmc.district_name as main_respondant_district',
+        // main respondent
+        'r.respondent_name as main_respondent_name',
+        'r.designation as main_respondent_designation',
+
+        // action
+        'ca.remarks as ca_remark',
+        'ca.subject as ca_subject',
+        'ca.status as ca_status'
+    )
+
+    ->where('cm.id', $id)
+    ->first();
+
+
+/*--------------------------------------------------
+| ALL Complainant
+|--------------------------------------------------*/
+    $complainDetails->complainants =  DB::table('complainants')
+     ->leftJoin('district_master_new as ddn', 'complainants.permanent_district', '=', 'ddn.district_code')
+    ->select('complainants.*','ddn.district_name')
+     ->where('complaint_id', $id)
+    ->get();
+/*--------------------------------------------------
+| ALL RESPONDENTS
+|--------------------------------------------------*/
+$complainDetails->respondant = DB::table('respondents')
+    ->leftJoin('district_master_new as r', 'respondents.respondent_district', '=', 'r.district_code')
+    ->select('respondents.*', 'r.district_name')
+    ->where('complaint_id', $id)
+    ->get();
+
+
+/*--------------------------------------------------
+| SUPPORTING DOCUMENTS
+|--------------------------------------------------*/
+$complainDetails->support = DB::table('complaint_supporting')
+    ->where('complaint_id', $id)
+    ->get();
+
+
+/*--------------------------------------------------
+| WITNESSES
+|--------------------------------------------------*/
+$complainDetails->witness = DB::table('complaint_witness')
+    ->where('complaint_id', $id)
+    ->get();
+
+
+/*--------------------------------------------------
+| ACTIONS (Verified / Forwarded only)
+|--------------------------------------------------*/
+// $complainDetails->actions = DB::table('complaint_actions')
+//     ->where('complaint_id', $id)
+//     ->where(function ($q) {
+//         $q->where('status', 'Verified')
+//           ->orWhere('status', 'Forwarded');
+//     })
+//     ->get();
+    $actions = DB::table('complaint_actions')
+    ->where('complaint_id', $id)
+    ->orderBy('id', 'desc')
+    ->get();
+
+        $userIds = [];
+
+        /* Sab forward_* fields se IDs collect karo */
+        foreach ($actions as $row) {
+
+            foreach ($row as $key => $value) {
+
+                if (
+                    str_starts_with($key, 'forward_') &&
+                    is_numeric($value)
+                ) {
+                    $userIds[] = $value;
+                }
+            }
+        }
+
+        $userIds = array_unique($userIds);
+
+        /* Users ka data lao */
+        $users = DB::table('users')
+            ->whereIn('id', $userIds)
+            ->pluck('name', 'id'); // id => name
+
+
+        /* IDs ko name me convert karo */
+        foreach ($actions as $row) {
+
+            foreach ($row as $key => $value) {
+
+                if (
+                    str_starts_with($key, 'forward_') &&
+                    is_numeric($value)
+                ) {
+                    $row->{$key . '_name'} = $users[$value] ?? null;
+                }
+            }
+        }
+
+        /* Final assign */
+        $complainDetails->actions = $actions;
+
+          return response()->json([
+               'status' => true,
+               'message' => 'Records Fetch successfully',
+               'data' => $complainDetails,
+           ]);
+    }
+ public function viewOldComplaint($id)
+  {
+   
+    $complainDetails = DB::table('old_complaints_data as cm')
+
+    ->leftJoin('district_master_new as ddn', 'cm.DISTT', '=', 'ddn.district_code')
+    ->leftJoin('master_department as md', 'cm.DEPTT', '=', 'md.dept_code')
+  
+    // MAIN COMPLAINANT ONLY
+    // ->join('complainants as cpt', function ($join) {
+    //     $join->on('cm.id', '=', 'cpt.complaint_id')
+    //          ->where('cpt.is_main', 1);
+    // })
+
+    // MAIN RESPONDENT ONLY
+    // ->join('respondents as r', function ($join) {
+    //     $join->on('cm.id', '=', 'r.complaint_id')
+    //          ->where('r.is_main', 1);
+    // })
+//   ->leftJoin('district_master_new as dmc', 'cpt.permanent_district', '=', 'dmc.district_code')
+//     ->leftJoin('district_master_new as rmc', 'r.respondent_district', '=', 'rmc.district_code')
+
+//     ->leftJoin('complaint_actions as ca', 'cm.id', '=', 'ca.complaint_id')
+
+    ->select(
+        'cm.*',
+        'ddn.district_name as district_name',
+        'md.name as department_name',
+
+        // // main complainant
+        // 'cpt.complainant_name as main_complainant_name',
+        // 'cpt.father_name as main_complainant_father',
+        // 'dmc.district_name as main_complainant_district',
+        // 'rmc.district_name as main_respondant_district',
+        // // main respondent
+        // 'r.respondent_name as main_respondent_name',
+        // 'r.designation as main_respondent_designation',
+
+        // // action
+        // 'ca.remarks as ca_remark',
+        // 'ca.subject as ca_subject',
+        // 'ca.status as ca_status'
+    )
+
+    ->where('cm.id', $id)
+    ->first();
+
+
+    $actions = DB::table('complaint_actions')
+    ->where('complaint_id', $id)
+    ->orderBy('id', 'desc')
+    ->get();
+
+        $userIds = [];
+
+        /* Sab forward_* fields se IDs collect karo */
+        foreach ($actions as $row) {
+
+            foreach ($row as $key => $value) {
+
+                if (
+                    str_starts_with($key, 'forward_') &&
+                    is_numeric($value)
+                ) {
+                    $userIds[] = $value;
+                }
+            }
+        }
+
+        $userIds = array_unique($userIds);
+
+        /* Users ka data lao */
+        $users = DB::table('users')
+            ->whereIn('id', $userIds)
+            ->pluck('name', 'id'); // id => name
+
+
+        /* IDs ko name me convert karo */
+        foreach ($actions as $row) {
+
+            foreach ($row as $key => $value) {
+
+                if (
+                    str_starts_with($key, 'forward_') &&
+                    is_numeric($value)
+                ) {
+                    $row->{$key . '_name'} = $users[$value] ?? null;
+                }
+            }
+        }
+
+        /* Final assign */
+        $complainDetails->actions = $actions;
+
+          return response()->json([
+               'status' => true,
+               'message' => 'Records Fetch successfully',
+               'data' => $complainDetails,
+           ]);
+    }
+         public function viewDraft($id)
+  {
+    //    $complainDetails = DB::table('complaints as cm')
+    //    ->leftJoin('complaints_details as cd', 'cm.id', '=', 'cd.complain_id')
+    // ->leftJoin('district_master_new as dd', 'cm.district_id', '=', 'dd.district_code')
+    // ->leftJoin('departments as dp', 'cd.department_id', '=', 'dp.id')
+    // ->leftJoin('designations as ds', 'cd.designation_id', '=', 'ds.id')
+    // ->leftJoin('complaintype as ct', 'cd.complaintype_id', '=', 'ct.id')
+    // ->leftJoin('subjects as sub', 'cd.subject_id', '=', 'sub.id') // <-- should be subject_id, not department_id
+    // ->select(
+    //     'cm.*',
+    //     'dd.district_name',
+    //     'dp.name as department_name',
+    //     'ds.name as designation_name',
+    //     'ct.name as complaintype_name',
+    //     'sub.name as subject_name',
+    //     // 'cd.*'
+    // )
+    // ->where('cm.id', $id)
+    // ->first();
+
+    $complainDetails = DB::table('complaints as cm')
+    ->leftJoin('district_master_new as dd', 'cm.district_id', '=', 'dd.district_code')
+    ->select(
+        'cm.*',
+        'dd.district_name'
+    )
+    ->where('cm.in_draft', '1')
+    ->where('cm.id', $id)
+    ->first();
+
+$complainDetails->details = DB::table('complaints_details as cd')
+    ->leftJoin('departments as dp', 'cd.department_id', '=', 'dp.id')
+    ->leftJoin('designations as ds', 'cd.designation_id', '=', 'ds.id')
+    ->leftJoin('complaintype as ct', 'cd.complaintype_id', '=', 'ct.id')
+    ->leftJoin('subjects as sub', 'cd.subject_id', '=', 'sub.id')
+    ->select(
+        'cd.*',
+        'dp.name as department_name',
+        'ds.name as designation_name',
+        'ct.name as complaintype_name',
+        'sub.name as subject_name'
+    )
+    ->where('cd.complain_id', $id)
+    ->get();
+           
+
+          return response()->json([
+               'status' => true,
+               'message' => 'Records Fetch successfully',
+               'data' => $complainDetails,
+           ]);
+    }
+
+    //     public function getFilePreview($id){
+    //     $cmp = Complaint::findOrFail($id);
+    //     $cmpDetail = ComplainDetails::where('complain_id',$cmp->id)->get();
+    //     foreach($cmpDetail as $c){
+
+    //         $path[] = Storage::url('Document/' . $c->file); 
+    //         $cmp->filepath = $path;
+    //     }
+    //        return response()->json([
+    //            'status' => true,
+    //            'message' => 'File Fetch successfully',
+    //            'data' => $cmp->filepath,
+    //        ]);
+
+    // }
+
+      public function getFilePreview($id){
+        $cmp = Complaint::findOrFail($id);
+        $cmpDetail = ComplainDocuments::where('complain_id',$cmp->id)->get();
+        foreach($cmpDetail as $c){
+
+            $path[] = Storage::url($c->file);
+
+            $cmp->filepath = $path;
+        }
+           return response()->json([
+               'status' => true,
+               'message' => 'File Fetch successfully',
+               'data' => $cmp->filepath,
+           ]);
+
+    }
+    //   public function getFileCP($id){
+    //     // dd("nn");
+    //     $cmp = OldComplaintsData::findOrFail($id);
+    //    $cmpNO = ($cmp->COMP_NO < 10) ? '0' . $cmp->COMP_NO : $cmp->COMP_NO;
+    //     $cmpY = $cmp->YEAR1;
+    //     // $baseurl = 'http://192.168.0.251/api';
+    //     $path = Storage::url('/'.$cmpY .'-'.$cmpY.'CP');
+    //     $cmp->cp = $path;
+    //     // $cmpDetail = ComplainDocuments::where('complain_id',$cmp->id)->get();
+    //     // foreach($cmpDetail as $c){
+
+    //     //     $path[] = Storage::url($c->file);
+
+    //     //     $cmp->filepath = $path;
+    //     // }
+    //        return response()->json([
+    //            'status' => true,
+    //            'message' => 'File Fetch successfully',
+    //            'data' => $cmp->cp,
+    //        ]);
+
+    // }
+
+    //    public function getFileNP($id){
+    //     $cmp = OldComplaintsData::findOrFail($id);
+    //    $cmpNO = ($cmp->COMP_NO < 10) ? '0' . $cmp->COMP_NO : $cmp->COMP_NO;
+    //     $cmpY = $cmp->YEAR1;
+    //     // $baseurl = 'http://192.168.0.251/api';
+    //     $path = Storage::url('/'.$cmpY .'-'.$cmpY.'NP');
+    //     $cmp->np = $path;
+    //     // $cmpDetail = ComplainDocuments::where('complain_id',$cmp->id)->get();
+    //     // foreach($cmpDetail as $c){
+
+    //     //     $path[] = Storage::url($c->file);
+
+    //     //     $cmp->filepath = $path;
+    //     // }
+    //        return response()->json([
+    //            'status' => true,
+    //            'message' => 'File Fetch successfully',
+    //            'data' => $cmp->np,
+    //        ]);
+
+    // }
+
+         public function getFileCP($id)
+{
+    $cmp = OldComplaintsData::findOrFail($id);
+
+    $cmpNO = ($cmp->COMP_NO < 10)
+        ? '0' . $cmp->COMP_NO
+        : $cmp->COMP_NO;
+
+    $cmpY = $cmp->YEAR1;
+
+    // Search file name
+    $searchFile = $cmpNO . '-' . $cmpY . 'CP.pdf';
+
+    // Folder path
+    $folderPath = storage_path('app/public/lokayuktData');
+
+    if (!is_dir($folderPath)) {
+        return response()->json([
+            'status' => false,
+            'message' => 'Folder not found'
+        ], 404);
+    }
+
+    try {
+
+        $iterator = new RecursiveIteratorIterator(
+            new RecursiveDirectoryIterator(
+                $folderPath,
+                RecursiveDirectoryIterator::SKIP_DOTS
+            )
+        );
+
+        foreach ($iterator as $file) {
+
+            if (
+                $file->isFile() &&
+                strtolower($file->getFilename()) === strtolower($searchFile)
+            ) {
+
+                // Relative path generate
+                $relativePath = str_replace(
+                    storage_path('app/public/'),
+                    '',
+                    $file->getPathname()
+                );
+
+                // URL generate
+                $path = Storage::url($relativePath);
+
+                // Same response format
+                $cmp->cp = $path;
+
+                return response()->json([
+                    'status' => true,
+                    'message' => 'File Fetch successfully',
+                    'data' => $cmp->cp,
+                ]);
+            }
+        }
+
+        return response()->json([
+            'status' => false,
+            'message' => 'PDF file not found'
+        ], 404);
+
+    } catch (\Exception $e) {
+
+        return response()->json([
+            'status' => false,
+            'message' => 'Error searching file',
+            'error' => $e->getMessage()
+        ], 500);
+    }
+}
+
+public function getFileNP($id)
+{
+    $cmp = OldComplaintsData::findOrFail($id);
+
+    $cmpNO = ($cmp->COMP_NO < 10)
+        ? '0' . $cmp->COMP_NO
+        : $cmp->COMP_NO;
+
+    $cmpY = $cmp->YEAR1;
+
+    // Search file name
+    $searchFile = $cmpNO . '-' . $cmpY . 'NP.pdf';
+
+    // Folder path
+    $folderPath = storage_path('app/public/lokayuktData');
+
+    if (!is_dir($folderPath)) {
+        return response()->json([
+            'status' => false,
+            'message' => 'Folder not found'
+        ], 404);
+    }
+
+    try {
+
+        $iterator = new RecursiveIteratorIterator(
+            new RecursiveDirectoryIterator(
+                $folderPath,
+                RecursiveDirectoryIterator::SKIP_DOTS
+            )
+        );
+
+        foreach ($iterator as $file) {
+
+            if (
+                $file->isFile() &&
+                strtolower($file->getFilename()) === strtolower($searchFile)
+            ) {
+
+                // Relative path generate
+                $relativePath = str_replace(
+                    storage_path('app/public/'),
+                    '',
+                    $file->getPathname()
+                );
+
+                // URL generate
+                $path = Storage::url($relativePath);
+
+                // Same response format
+                $cmp->np = $path;
+
+                return response()->json([
+                    'status' => true,
+                    'message' => 'File Fetch successfully',
+                    'data' => $cmp->np,
+                ]);
+            }
+        }
+
+        return response()->json([
+            'status' => false,
+            'message' => 'PDF file not found'
+        ], 404);
+
+    } catch (\Exception $e) {
+
+        return response()->json([
+            'status' => false,
+            'message' => 'Error searching file',
+            'error' => $e->getMessage()
+        ], 500);
+    }
+}
+
+
+         public function allComplainsDashboard(){
+       
+           $query = DB::table('complaints');
+          $complainDetails = $query
+           ->where('approved_rejected_by_ro' ,'0')
+           ->where('in_draft','0')
+          ->count();
+        // dd($deadpersondetails);
+
+          return response()->json([
+               'status' => true,
+               'message' => 'Records Fetch successfully',
+               'data' => $complainDetails,
+           ]);
+    }
+
+     public function allComplainsDashboardPending(){
+       
+           $query = DB::table('complaints')
+            ->where('in_draft','0')
+           ->where('status','In Progress');
+          $complainDetails = $query->count();
+        // dd($deadpersondetails);
+
+          return response()->json([
+               'status' => true,
+               'message' => 'Records Fetch successfully',
+               'data' => $complainDetails,
+           ]);
+    }
+
+     public function allComplainsDashboardApproved(){
+               $query = DB::table('complaints')
+                ->where('in_draft','0')
+           ->where('status','Disposed - Accepted');
+          $complainDetails = $query->count();
+        // dd($deadpersondetails);
+
+          return response()->json([
+               'status' => true,
+               'message' => 'Records Fetch successfully',
+               'data' => $complainDetails,
+           ]);
+    }
+
+     public function allComplainsDashboardRejected(){
+              $query = DB::table('complaints')
+               ->where('in_draft','0')
+           ->where('status','Rejected');
+          $complainDetails = $query->count();
+        // dd($deadpersondetails);
+
+          return response()->json([
+               'status' => true,
+               'message' => 'Records Fetch successfully',
+               'data' => $complainDetails,
+           ]);
+    }
+
+    public function complainDistrictWise()
+    {
+       
+        $complainCounts = Complaint::select('district_master_new.district_name', DB::raw('count(*) as complain_count'))
+            ->join('district_master_new', 'complaints.district_id', '=', 'district_master_new.district_code')
+            ->groupBy('district_master_new.district_code', 'district_master_new.district_name')
+            ->where('in_draft','0')
+            ->limit(5)
+            //  ->having('complain_count', '>', 0)
+            ->pluck('complain_count', 'district_master_new.district_name');
+       return response()->json([
+               'status' => true,
+               'message' => 'Records Fetch successfully',
+               'data' => $complainCounts,
+           ]);
+    }
+
+      public function complainDepartmentWise()
+    {
+       
+        $complainCounts = Complaint::select('departments.name', DB::raw('count(*) as complain_count'))
+        ->leftJoin('complaints_details as cd', 'complaints.id', '=', 'cd.complain_id')    
+        ->leftJoin('departments', 'cd.department_id', '=', 'departments.id')
+            ->groupBy('departments.id', 'departments.name','department_id')
+            ->where('in_draft','0')  
+            ->pluck('complain_count', 'departments.name');
+       return response()->json([
+               'status' => true,
+               'message' => 'Records Fetch successfully',
+               'data' => $complainCounts,
+           ]);
+    }
+
+   
+       public function getMontlyTrends(){
+        // $months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        // for ($j = 1; $j <= 12; $j++) {      
+        // $months[] = date('M', mktime(0, 0, 0, $j, 10));
+        // }
+         $complaintData = DB::table('complaints as cm')
+    ->select(
+    
+        DB::raw('MONTH(created_at) as month, COUNT(*) as count'),
+        DB::raw('COUNT(cm.id) as total_complaints'),
+        DB::raw("SUM(CASE WHEN cm.approved_rejected_by_ro = '1' THEN 1 ELSE 0 END) as total_approved"),
+        DB::raw("SUM(CASE WHEN cm.approved_rejected_by_ro = '0' THEN 1 ELSE 0 END) as total_pending")
+    )
+  
+    ->groupBy('month')
+    // ->having('total_applications', '>', 0)
+    ->orderBy('cm.name')
+    ->limit(10)
+     ->where('in_draft','0')
+    ->get();
+    $complaintData = $complaintData->map(function ($item) {
+        if($item->total_complaints){
+   return [
+                'month' => date('F', mktime(0, 0, 0, $item->month, 10)),
+                'year' => now()->year,
+                // 'total_complaints' => $item->total_complaints,
+                'approved' => $item->total_approved,
+                'pending' => $item->total_pending,
+            ];
+        }
+         
+        })->toArray();
+
+           return response()->json([
+                'status' => true,
+                'message' => 'Records Fetch successfully',
+                'data' =>  $complaintData,
+        ]);
+
+    }
+
+     public function complainComplaintypeWise()
+    {
+       
+    //     $complainCounts = Complaint::select('complaintype.name', DB::raw('count(*) as complain_count'))
+    //         ->join('complaintype', 'complaints.complaintype_id', '=', 'complaintype.id')
+    //         ->groupBy('complaintype.id', 'complaintype.name')
+             
+    //         ->pluck('complain_count', 'complaintype.name');
+    //    return response()->json([
+    //            'status' => true,
+    //            'message' => 'Records Fetch successfully',
+    //            'data' => $complainCounts,
+    //        ]);
+
+        $complaintData = DB::table('complaints as cm')
+        ->leftJoin('complaints_details as cd', 'cm.id', '=', 'cd.complain_id')
+         ->leftjoin('complaintype', 'cd.complaintype_id', '=', 'complaintype.id')
+    ->select(
+    
+        'complaintype.name',
+        //  DB::raw('count(*) as complain_count'),
+        //  DB::raw('count(cm.id) as total_count'),
+          DB::raw('ROUND(AVG(DATEDIFF(NOW(), cd.created_at)), 1) as avg_days')
+         
+        // DB::raw("SUM(CASE WHEN cm.status = 'Disposed - Accepted' THEN 1 ELSE 0 END) as total_approved"),
+        // DB::raw("SUM(CASE WHEN cm.status = 'In Progress' THEN 1 ELSE 0 END) as total_pending")
+    )
+  
+    ->groupBy('complaintype.id', 'complaintype.name')
+    // ->having('total_applications', '>', 0)
+    // ->orderBy('cm.name')
+     ->where('in_draft','0')
+    ->limit(10)
+    ->get();
+//     $complaintData = $complaintData->map(function ($item) {
+//         if($item->total_complaints){
+//    return [
+//                 'month' => date('F', mktime(0, 0, 0, $item->month, 10)),
+//                 'year' => now()->year,
+//                 // 'total_complaints' => $item->total_complaints,
+//                 'approved' => $item->total_approved,
+//                 'pending' => $item->total_pending,
+//             ];
+//         }
+         
+//         })->toArray();   
+
+           return response()->json([
+                'status' => true,
+                'message' => 'Records Fetch successfully',
+                'data' =>  $complaintData,
+        ]);
+    }
+
+    public function complianceReport(){
+    //      $complainDetails = DB::table('complaints as cm')
+    // ->select(
+    //     DB::raw('COUNT(cm.id) as total_complaints'),
+
+    //     // Counts
+    //     // DB::raw("SUM(CASE WHEN cm.status = 'Disposed - Accepted' THEN 1 ELSE 0 END) as total_approved"),
+    //     // DB::raw("SUM(CASE WHEN cm.status = 'In Progress' THEN 1 ELSE 0 END) as total_pending"),
+    //     // DB::raw("SUM(CASE WHEN cm.status = 'Rejected' THEN 1 ELSE 0 END) as total_rejected"),
+
+    //     // Percentages
+    //     // DB::raw("ROUND(
+    //     //     (SUM(CASE WHEN cm.approved_rejected_by_ro = '1' THEN 1 ELSE 0 END) / 
+    //     //      COUNT(cm.id)) * 100, 2
+    //     // ) as approved_percentage"),
+
+    //     // DB::raw("ROUND(
+    //     //     (SUM(CASE WHEN cm.approved_rejected_by_ro = '0' THEN 1 ELSE 0 END) / 
+    //     //      COUNT(cm.id)) * 100, 2
+    //     // ) as pending_percentage"),
+
+    //     // DB::raw("ROUND(
+    //     //     (SUM(CASE WHEN cm.status = 'Rejected' THEN 1 ELSE 0 END) / 
+    //     //      COUNT(cm.id)) * 100, 2
+    //     // ) as rejected_percentage")
+    //       DB::raw("
+    //         ROUND((SUM(CASE WHEN DATEDIFF(NOW(), cm.created_at) BETWEEN 1 AND 10 THEN 1 ELSE 0 END) / COUNT(cm.id)) * 100, 2) as approved_percentage
+    //     "),
+    //        DB::raw("
+    //         ROUND((SUM(CASE WHEN DATEDIFF(NOW(), cm.created_at) BETWEEN 10 AND 20 THEN 1 ELSE 0 END) / COUNT(cm.id)) * 100, 2) as pending_percentage
+    //     "),
+    //     DB::raw("
+    //         ROUND((SUM(CASE WHEN DATEDIFF(NOW(), cm.created_at) > 20 THEN 1 ELSE 0 END) / COUNT(cm.id)) * 100, 2) as rejected_percentage
+    //     ")
+    // )
+    //  ->where('approved_rejected_by_ro','1')
+    //  ->where('in_draft','0')
+    // ->first();
+    $complainDetails = DB::table('complaints as cm')
+    ->select(
+        DB::raw('COUNT(cm.id) as total_complaints'),
+
+        // Within Target: Complaints created within the last 10 days
+        DB::raw("
+            ROUND((SUM(CASE WHEN DATEDIFF(NOW(), cm.created_at) BETWEEN 0 AND 10 THEN 1 ELSE 0 END) / COUNT(cm.id)) * 100, 2) as approved_percentage
+        "),
+
+        // Delayed: Complaints between 11 to 20 days old
+        DB::raw("
+            ROUND((SUM(CASE WHEN DATEDIFF(NOW(), cm.created_at) BETWEEN 11 AND 20 THEN 1 ELSE 0 END) / COUNT(cm.id)) * 100, 2) as pending_percentage
+        "),
+
+        // Critical Delay: Complaints older than 20 days
+        DB::raw("
+            ROUND((SUM(CASE WHEN DATEDIFF(NOW(), cm.created_at) > 20 THEN 1 ELSE 0 END) / COUNT(cm.id)) * 100, 2) as rejected_percentage
+        ")
+    )
+    ->where('approved_rejected_by_ro', '1')
+    ->where('in_draft', '0')
+    ->first();
+
+    return response()->json([
+        'status' => true,
+        'message' => 'Records Fetch successfully',
+        'data' => $complainDetails,
+    ]);
+
+    }
+   
+    // public function progress_report(){
+    //     // $userSubroleRole = Auth::user()->subrole->name;
+        
+    //      $records = DB::table('complaints')
+    //     //   ->leftJoin('complaints_details as cd', 'complaints.id', '=', 'cd.complain_id')
+    //         // ->leftJoin('district_master_new as dd', DB::raw("complaints.district_id"), '=', DB::raw("dd.district_code"))
+    //         // ->leftJoin('departments as dp', DB::raw("complaints.department_id"), '=', DB::raw("dp.id"))
+    //         // ->leftJoin('designations as ds', DB::raw("complaints.designation_id"), '=', DB::raw("ds.id"))
+    //         // ->leftJoin('complaintype as ct', DB::raw("complaints.complaintype_id"), '=', DB::raw("ct.id"))
+    //         // ->leftJoin('subjects as sub', DB::raw("complaints.department_id"), '=', DB::raw("sub.id"))
+    //         // ->leftJoin('users as u', DB::raw("complaints.added_by"), '=', DB::raw("u.id"))
+    //         // ->leftJoin('sub_roles as srole', DB::raw("u.sub_role_id"), '=', DB::raw("srole.id"))
+    //         // ->leftJoin('complaint_actions as ca', DB::raw("complaints.id"), '=', DB::raw("ca.complaint_id"))
+            
+    //         ->select(
+    //             'complaints.*',
+    //             // 'u.id as user_id',
+    //             // 'srole.name as subrole_name',
+    //             // 'ca.*',
+    //             // 'cd.*'
+    //             // 'dd.district_name as district_name',
+    //             // 'dp.name as department_name',
+    //             // 'ds.name as designation_name',
+    //             // 'ct.name as complaintype_name',
+    //             // 'sub.name as subject_name',
+    //         )
+    //         // ->groupBy('complaints.id','u.id','srole.name')
+    //         ->get();
+    //           return response()->json([
+    //             'status' => true,
+    //             'message' => 'Records Fetch successfully',
+    //             'data' => $records,
+    //         ]);
+    //         // dd($records);
+    // }
+
+        public function progress_report(){
+        // $userSubroleRole = Auth::user()->subrole->name;
+        
+         $records = DB::table('complaints')
+        //   ->leftJoin('complaints_details as cd', 'complaints.id', '=', 'cd.complain_id')
+            // ->leftJoin('district_master_new as dd', DB::raw("complaints.district_id"), '=', DB::raw("dd.district_code"))
+            // ->leftJoin('departments as dp', DB::raw("complaints.department_id"), '=', DB::raw("dp.id"))
+            // ->leftJoin('designations as ds', DB::raw("complaints.designation_id"), '=', DB::raw("ds.id"))
+            // ->leftJoin('complaintype as ct', DB::raw("complaints.complaintype_id"), '=', DB::raw("ct.id"))
+            // ->leftJoin('subjects as sub', DB::raw("complaints.department_id"), '=', DB::raw("sub.id"))
+            // ->leftJoin('users as u', DB::raw("complaints.added_by"), '=', DB::raw("u.id"))
+            // ->leftJoin('sub_roles as srole', DB::raw("u.sub_role_id"), '=', DB::raw("srole.id"))
+            ->join('complaint_actions as ca', DB::raw("complaints.id"), '=', DB::raw("ca.complaint_id"))
+            
+            ->select(
+                // 'complaints.*',
+                'ca.*',
+                'complaints.complain_no',
+                'complaints.name',
+                'complaints.approved_rejected_by_ro',
+                'complaints.approved_rejected_by_so_us',
+                'complaints.approved_rejected_by_ds_js',
+                'complaints.approved_rejected_by_d_a',
+                'complaints.approved_rejected_by_lokayukt',
+                // 'u.id as user_id',
+                // 'srole.name as subrole_name',
+                
+                // 'cd.*'
+                // 'dd.district_name as district_name',
+                // 'dp.name as department_name',
+                // 'ds.name as designation_name',
+                // 'ct.name as complaintype_name',
+                // 'sub.name as subject_name',
+            )
+            // ->groupBy('complaints.id','u.id','srole.name')
+             ->where('in_draft','0')
+             ->where('ca.status','<>', "Report Requested")
+            //  ->where('ca.type', 1)
+            ->orderBy('complaints.id','desc')
+            ->get();
+              return response()->json([
+                'status' => true,
+                'message' => 'Records Fetch successfully',
+                'data' => $records,
+            ]);
+            // dd($records);
+    }
+
+
+     public function current_report(){
+        // $userSubroleRole = Auth::user()->subrole->name;
+        
+        //  $records = DB::table('complaints')
+        // //  ->leftJoin('complaints_details as cd', 'complaints.id', '=', 'cd.complain_id')
+        //     // ->leftJoin('district_master_new as dd', DB::raw("complaints.district_id"), '=', DB::raw("dd.district_code"))
+        //     // ->leftJoin('departments as dp', DB::raw("complaints.department_id"), '=', DB::raw("dp.id"))
+        //     // ->leftJoin('designations as ds', DB::raw("complaints.designation_id"), '=', DB::raw("ds.id"))
+        //     // ->leftJoin('complaintype as ct', DB::raw("complaints.complaintype_id"), '=', DB::raw("ct.id"))
+        //     // ->leftJoin('subjects as sub', DB::raw("complaints.department_id"), '=', DB::raw("sub.id"))
+        //     ->join('complaint_actions as ca', DB::raw("complaints.id"), '=', DB::raw("ca.complaint_id"))
+        //     ->leftJoin('users as u', DB::raw("ca.forward_by_ro"), '=', DB::raw("u.id"))
+        //     ->leftJoin('users as so_us', DB::raw("ca.forward_by_so_us"), '=', DB::raw("so_us.id"))
+        //     ->leftJoin('users as ds_js', DB::raw("ca.forward_by_ds_js"), '=', DB::raw("ds_js.id"))
+        //     ->leftJoin('users as sec', DB::raw("ca.forward_by_sec"), '=', DB::raw("sec.id"))
+        //     ->leftJoin('users as d_a', DB::raw("ca.forward_by_d_a"), '=', DB::raw("d_a.id"))
+        //     ->leftJoin('sub_roles as srole', DB::raw("u.sub_role_id"), '=', DB::raw("srole.id"))
+            
+        //     ->select(
+        //         'complaints.*',
+        //         'complaints.name',
+        //         'complaints.complain_no',
+        //         'ca.*',
+        //         // 'u.id as user_id',
+        //         'u.name as ro_name',
+        //         'so_us.name as so_name',
+        //         'ds_js.name as ds_name',
+        //         'sec.name as sec_name',
+        //         'd_a.name as da_name',
+        //         'srole.name as subrole_name',
+        //         // 'ca.*',
+        //         // 'cd.*',
+        //         DB::raw('DATEDIFF(NOW(), ca.target_date) as days')
+        //         // 'dd.district_name as district_name',
+        //         // 'dp.name as department_name',
+        //         // 'ds.name as designation_name',
+        //         // 'ct.name as complaintype_name',
+        //         // 'sub.name as subject_name',
+        //     )
+        //      ->where('in_draft','0')
+        //     ->orderBy('complaints.id','desc')
+        //     // ->groupBy('complaints.id','u.id','srole.name')
+        //     ->get();
+        $latestActions = DB::table('complaint_actions as ca1')
+    ->select('ca1.*')
+    //  ->where('ca1.type', 1)
+    ->join(DB::raw("(SELECT complaint_id, MAX(id) AS max_id
+            FROM complaint_actions
+            GROUP BY complaint_id
+        ) as ca2"),
+        function ($join) {
+            $join->on('ca1.id', '=', 'ca2.max_id');
+        }
+    );
+    // ->toSql();
+    // dd($latestActions);
+
+$records = DB::table('complaints')
+    ->joinSub($latestActions, 'ca', function ($join) {
+        $join->on('complaints.id', '=', 'ca.complaint_id');
+    })
+    ->leftJoin('users as u', 'ca.forward_by_ro', '=', 'u.id')
+    ->leftJoin('users as so_us', 'ca.forward_by_so_us', '=', 'so_us.id')
+    ->leftJoin('users as ds_js', 'ca.forward_by_ds_js', '=', 'ds_js.id')
+    ->leftJoin('users as sec', 'ca.forward_by_sec', '=', 'sec.id')
+    ->leftJoin('users as secto', 'ca.forward_to_sec', '=', 'secto.id')
+    ->leftJoin('users as cio', 'ca.forward_by_cio_io', '=', 'cio.id')
+    ->leftJoin('users as cioto', 'ca.forward_to_cio_io', '=', 'cioto.id')
+    ->leftJoin('users as d_a', 'ca.forward_by_d_a', '=', 'd_a.id')
+    ->leftJoin('sub_roles as srole', 'u.sub_role_id', '=', 'srole.id')
+    ->select(
+        'complaints.*',
+        'complaints.name',
+        'complaints.complain_no',
+        'complaints.status as current_status',
+        'ca.*',
+        'u.name as ro_name',
+        'so_us.name as so_name',
+        'ds_js.name as ds_name',
+        'sec.name as sec_name',
+        'secto.name as sec_to_name',
+        'cio.name as cio_name',
+        'cioto.name as cio_to_name',
+        'd_a.name as da_name',
+        'srole.name as subrole_name',
+        DB::raw('DATEDIFF(NOW(), complaints.created_at) as days')
+    )
+    ->where('in_draft', '0')
+    ->orderBy('complaints.id', 'desc')
+    // ->whereNotNull('target_date')
+    // ->toSql();
+    ->get();
+
+            //    dd($records);
+              return response()->json([
+                'status' => true,
+                'message' => 'Records Fetch successfully',
+                'data' => $records,
+            ]);
+         
+    }
+
+    public function analytics(){
+    //     $stats = DB::table('complaints')
+    // ->leftJoin('complaint_actions as ca', 'complaints.id', '=', 'ca.complaint_id')
+    // ->selectRaw('
+    //     AVG(DATEDIFF(IFNULL(ca.created_at, NOW()), complaints.created_at)) as avg_processing_time,
+    //     SUM(CASE WHEN complaints.form_status = "1" AND approved_rejected_by_ro ="1" THEN 1 ELSE 0 END) as files_in_transit,
+    //     SUM(CASE WHEN ca.target_date < NOW()  THEN 1 ELSE 0 END) as overdue_files
+    // ')
+    //  ->where('in_draft','0')
+    // ->first();
+    $stats = DB::table('complaints')
+    ->selectRaw('
+        AVG(DATEDIFF(NOW(), complaints.created_at)) as avg_processing_time,
+        SUM(CASE WHEN complaints.form_status = "1" AND approved_rejected_by_ro = "1" THEN 1 ELSE 0 END) as files_in_transit,
+        SUM(CASE WHEN DATEDIFF(NOW(), complaints.created_at) > 20 THEN 1 ELSE 0 END) as overdue_files
+    ')
+    ->where('in_draft', '0')
+    ->first();
+    // $stats = DB::table('complaints as c')
+    // // Join: when status became "in progress"
+    // ->join(DB::raw('(
+    //     SELECT complaint_id, MIN(created_at) as in_progress_at
+    //     FROM complaint_actions
+    //     WHERE status = "in progress"
+    //     GROUP BY complaint_id
+    // ) as in_progress'), 'c.id', '=', 'in_progress.complaint_id')
+
+    // // Join: when status became "disposed Approval"
+    // ->join(DB::raw('(
+    //     SELECT complaint_id, MAX(created_at) as disposed_at
+    //     FROM complaint_actions
+    //     WHERE status = "disposed Approval"
+    //     GROUP BY complaint_id
+    // ) as disposed'), 'c.id', '=', 'disposed.complaint_id')
+
+    // // Select overall stats
+    // ->selectRaw('
+    //     AVG(DATEDIFF(NOW(), c.created_at)) as avg_processing_time,
+    //     SUM(CASE WHEN c.form_status = "1" AND approved_rejected_by_ro = "1" THEN 1 ELSE 0 END) as files_in_transit,
+    //     SUM(CASE WHEN DATEDIFF(NOW(), c.created_at) > 20 THEN 1 ELSE 0 END) as overdue_files,
+    //     AVG(DATEDIFF(disposed.disposed_at, in_progress.in_progress_at)) as status_processing_time
+    // ')
+    // ->where('c.in_draft', '0')
+    // ->first();
+
+              return response()->json([
+                'status' => true,
+                'message' => 'Records Fetch successfully',
+                'data' =>  $stats,
+            ]);
+    }
+
+//     public function search(Request $request)
+// {
+//     // $search = $request->search;
+
+//     $query = Complaint::query();
+
+//     if ($request->COMP_NO) {
+//         $query->where('COMP_NO', $request->COMP_NO);
+//     }
+
+//     if ($request->YEAR) {
+//         $query->where('YEAR', $request->YEAR);
+//     }
+
+//     if ($request->COMP_DT) {
+//         $query->whereDate('COMP_DT', $request->COMP_DT);
+//     }
+
+//     if ($request->COMP_NM) {
+//         $query->where('COMP_NM', 'like', '%'.$request->COMP_NM.'%');
+//     }
+
+//     if ($request->DISTT) {
+//         $query->where('DISTT', $request->DISTT);
+//     }
+
+//     if ($request->NATURE) {
+//         $query->where('NATURE', $request->NATURE);
+//     }
+
+//     if ($request->LETT_NO) {
+//         $query->where('LETT_NO', 'like', '%'.$request->LETT_NO.'%');
+//     }
+
+//     $data = $query->paginate(10);
+
+
+// }
+
+public function search(Request $request)
+{
+    $query = DB::table('old_complaints_data')
+     ->leftJoin('district_master_new as dd', DB::raw("old_complaints_data.DISTT"), '=', DB::raw("dd.district_code"))
+     ->leftJoin('master_department as md', DB::raw("old_complaints_data.DEPTT"), '=', DB::raw("md.dept_code"))
+     ->select('old_complaints_data.*','dd.district_name as DISTT','md.name as DEPTT');
+    if ($request->comp_file) {
+        $query->where('COMP_NO', $request->comp_file);
+    }
+
+    if ($request->comp_resp) {
+        $query->where('COMP_NM', 'Like', '%'.$request->comp_resp.'%');
+    }
+
+    if ($request->date) {
+        $query->whereDate('COMP_DT', $request->date);
+    }
+
+    if ($request->year) {
+        $query->where('YEAR1', $request->year);
+    }
+
+    if ($request->district) {
+        $query->where('DISTT', $request->district);
+    }
+
+    if ($request->department) {
+        $query->where('DEPTT', $request->department);
+    }
+
+    // date range filter (from - to)
+    if ($request->from && $request->to) {
+        $query->whereBetween('ENROLL_DT', [$request->from, $request->to]);
+    }
+
+    // if ($request->enrollment_date) {
+    //     $query->whereDate('enrollment_date', $request->enrollment_date);
+    // }
+
+    if ($request->complaint_date) {
+        $query->whereDate('complaint_date', $request->complaint_date);
+    }
+
+    if ($request->nature) {
+        $query->where('nature', $request->nature);
+    }
+
+    $data = $query->paginate(10);
+
+     return response()->json([
+                'status' => true,
+                'message' => 'Records Fetch successfully',
+                'data' =>  $data,
+            ]);
+}
+// public function searchNewComplaints(Request $request)
+// {
+//     $query = DB::table('complaints')
+   
+//       ->leftJoin('complaint_actions as rep', DB::raw("complaints.id"), '=', DB::raw("rep.complaint_id"))
+//         ->leftJoin('complainants as cmlan', DB::raw("complaints.id"), '=', DB::raw("cmlan.complaint_id"))
+//         ->leftJoin('respondents as resp', DB::raw("complaints.id"), '=', DB::raw("resp.complaint_id"))
+//           ->leftJoin('district_master_new as dd', DB::raw("cmlan.permanent_district"), '=', DB::raw("dd.district_code"))
+//      ->leftJoin('master_department as md', DB::raw("resp.department_name"), '=', DB::raw("md.name"))
+//      ->select('complaints.id','complaints.complain_no','complaints.cause_date','dd.district_name as DISTT','md.name as DEPTT','cmlan.complainant_name','resp.respondent_name');
+//     if ($request->complain_no) {
+//         $query->where('complaints.id', $request->complain_no);
+//     }
+
+//     if ($request->complainant) {
+//         $query->where('cmlan.complainant_name', 'Like', '%'.$request->complainant.'%');
+//     }
+
+//     if ($request->respondant) {
+//         $query->where('resp.respondent_name', 'Like', '%'.$request->respondant.'%');
+//     }
+
+//     if ($request->date) {
+//         $query->whereDate('complaints.cause_date', $request->date);
+//     }
+
+//     // if ($request->year) {
+//     //     $query->where('YEAR1', $request->year);
+//     // }
+
+//     if ($request->district) {
+//         $query->where('cmlan.permanent_district', $request->district);
+//     }
+
+//     if ($request->department) {
+//         $query->where('md.id', $request->department);
+//     }
+
+//     // date range filter (from - to)
+//     if ($request->enroll_from && $request->enroll_to) {
+//         $query->whereBetween('complaints.created_at', [$request->enroll_from, $request->enroll_to]);
+//     }
+
+//     // if ($request->enrollment_date) {
+//     //     $query->whereDate('enrollment_date', $request->enrollment_date);
+//     // }
+
+//     if ($request->complaint_date) {
+//         $query->whereDate('complaint_date', $request->complaint_date);
+//     }
+
+//     if ($request->category) {
+//         $query->where('complaints.nature', $request->nature);
+//     }
+
+//     $data = $query->distinct('complaints.id')->paginate(10);
+
+//      return response()->json([
+//                 'status' => true,
+//                 'message' => 'Records Fetch successfully',
+//                 'data' =>  $data,
+//             ]);
+// }
+public function searchNewComplaints(Request $request)
+{
+    $query = DB::table('complaints')
+
+        ->leftJoin('complaint_actions as rep', DB::raw("complaints.id"), '=', DB::raw("rep.complaint_id"))
+
+        ->leftJoin('complainants as cmlan', DB::raw("complaints.id"), '=', DB::raw("cmlan.complaint_id"))
+
+        ->leftJoin('respondents as resp', DB::raw("complaints.id"), '=', DB::raw("resp.complaint_id"))
+
+        ->leftJoin('district_master_new as dd', DB::raw("cmlan.permanent_district"), '=', DB::raw("dd.district_code"))
+
+        ->leftJoin('master_department as md', DB::raw("resp.department_name"), '=', DB::raw("md.name"))
+
+        ->select(
+            'complaints.id',
+            'complaints.complain_no',
+            'complaints.cause_date',
+
+            DB::raw("GROUP_CONCAT(Distinct dd.district_name SEPARATOR '] ') as DISTT"),
+
+            DB::raw("GROUP_CONCAT(Distinct md.name SEPARATOR '] ') as DEPTT"),
+
+            DB::raw("GROUP_CONCAT(Distinct cmlan.complainant_name SEPARATOR '] ') as complainant_name"),
+
+            DB::raw("GROUP_CONCAT(Distinct resp.respondent_name SEPARATOR '] ') as respondent_designation"),
+            DB::raw("GROUP_CONCAT(Distinct resp.respondent_name SEPARATOR '] ') as respondent_name")
+        );
+
+    if ($request->complain_no) {
+        $query->where('complaints.id', $request->complain_no);
+    }
+
+    if ($request->complainant) {
+        $query->where('cmlan.complainant_name', 'LIKE', '%' . $request->complainant . '%');
+    }
+
+    if ($request->respondant) {
+        $query->where('resp.respondent_name', 'LIKE', '%' . $request->respondant . '%');
+    }
+
+    if ($request->date) {
+        $query->whereDate('complaints.cause_date', $request->date);
+    }
+
+    // if ($request->year) {
+    //     $query->where('YEAR1', $request->year);
+    // }
+
+    if ($request->district) {
+        $query->where('cmlan.permanent_district', $request->district);
+    }
+
+    if ($request->department) {
+        $query->where('md.id', $request->department);
+    }
+
+    // date range filter (from - to)
+    if ($request->enroll_from && $request->enroll_to) {
+        $query->whereBetween('complaints.created_at', [
+            $request->enroll_from,
+            $request->enroll_to
+        ]);
+    }
+
+    // if ($request->enrollment_date) {
+    //     $query->whereDate('enrollment_date', $request->enrollment_date);
+    // }
+
+    if ($request->complaint_date) {
+        $query->whereDate('complaint_date', $request->complaint_date);
+    }
+
+    if ($request->category) {
+        $query->where('complaints.nature', $request->nature);
+    }
+
+    // SINGLE ROW RESULT
+    $query->groupBy(
+        'complaints.id',
+        'complaints.complain_no',
+        'complaints.cause_date'
+    );
+
+    $data = $query->paginate(10);
+
+    return response()->json([
+        'status' => true,
+        'message' => 'Records Fetch successfully',
+        'data' => $data,
+    ]);
+}
+
+public function approve(Request $request)
+{
+    DB::beginTransaction();
+    $user_id = Auth::id();
+    try {
+        // ✅ Validation
+        $validator = Validator::make($request->all(), [
+            'request_complaint_id' => 'required|exists:request_complaints,id',
+            'status'               => 'required|in:allow,received',
+            'remark'               => 'required|string',
+            // 'user_id'              => 'required|integer'
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'status' => false,
+                'message' => $validator->errors()
+            ], 422);
+        }
+
+           $complaint = DB::table('request_complaints')
+            ->where('id', $request->request_complaint_id)
+            ->first();
+
+        // ✅ Update Status
+        DB::table('request_complaints')
+            ->where('id', $request->request_complaint_id)
+            ->update([
+                'status'     => $request->status,
+                'updated_at' => now()
+            ]);
+
+        // ✅ Insert Remark
+        if($request->remark){
+
+            DB::table('request_complaints_remarks')->insert([
+                'request_complaint_id' => $request->request_complaint_id,
+                'user_id'              => $user_id,
+                'remark'               => $request->remark,
+                'created_at'           => now(),
+                'updated_at'           => now()
+            ]);
+        }
+
+          DB::table('request_complaint_logs')->insert([
+            'request_complaint_id' => $request->request_complaint_id,
+            'action_by'            => $user_id,
+            'old_status'           => $complaint->status ?? null,
+            'new_status'           => $request->status,
+            'remark'               => $request->remark,
+            'created_at'           => now(),
+            'updated_at'           => now()
+        ]);
+
+        DB::commit();
+
+        return response()->json([
+            'status'  => true,
+            'message' => 'Status updated and remark added successfully'
+        ]);
+
+    } catch (\Exception $e) {
+        DB::rollBack();
+
+        return response()->json([
+            'status'  => false,
+            'message' => 'Something went wrong',
+            'error'   => $e->getMessage()
+        ], 500);
+    }
+}
+
+public function resetBadgeCount(Request $request)
+{
+    DB::beginTransaction();
+
+    try {
+        $updated = DB::table('request_complaints')
+         ->where('count_for_badge', 1)
+            ->update([
+                'count_for_badge' => 0
+            ]);
+
+        DB::commit();
+
+        return response()->json([
+            'status'  => true,
+            'message' => 'Sent to Pending request successfully',
+            'updated_rows' => $updated
+        ], 200);
+
+    } catch (\Exception $e) {
+        DB::rollBack();
+
+        return response()->json([
+            'status'  => false,
+            'message' => 'Something went wrong',
+            'error'   => $e->getMessage()
+        ], 500);
+    }
+}
+
+}

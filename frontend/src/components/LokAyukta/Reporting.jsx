@@ -1,0 +1,1202 @@
+import { useQuery } from "@tanstack/react-query";
+import axios from "axios";
+import Cookies from "js-cookie";
+import React, { useState, useMemo, useEffect, useRef } from "react";
+import {
+  FaCalendarAlt,
+  FaMapMarkerAlt,
+  FaBuilding,
+  FaClock,
+  FaPaperPlane,
+  FaChartPie,
+  FaFilePdf,
+  FaFileExcel,
+  FaPrint,
+  FaSpinner,
+  FaEye,
+  FaTimes,
+} from "react-icons/fa";
+import * as XLSX from "xlsx";
+import html2pdf from "html2pdf.js";
+import toast from "react-hot-toast";
+import { useNavigate } from "react-router-dom";
+import Pagination from "../Pagination";
+import DataTable from "react-data-table-component";
+
+const BASE_URL = import.meta.env.VITE_API_BASE ?? "http://localhost:8000/api";
+const token = Cookies.get("access_token");
+
+const api = axios.create({
+  baseURL: BASE_URL,
+  headers: {
+    ...(token && { Authorization: `Bearer ${token}` }),
+  },
+});
+
+const Reporting = () => {
+  const navigate = useNavigate();
+  const [activeTab, setActiveTab] = useState("enrollment");
+  const [exportingPdf, setExportingPdf] = useState(false);
+  const [exportingExcel, setExportingExcel] = useState(false);
+  const [pdfViewUrl, setPdfViewUrl] = useState(null);
+  const [loadingDoc, setLoadingDoc] = useState(null);
+  const overallPrintRef = useRef(null);
+
+  const [enrollmentPage, setEnrollmentPage] = useState(1);
+  const [districtPage, setDistrictPage] = useState(1);
+  const [departmentPage, setDepartmentPage] = useState(1);
+  const [dispatchPage, setDispatchPage] = useState(1);
+  const [pendencyPage, setPendencyPage] = useState(1);
+
+  const itemsPerPage = 10;
+
+  const [enrollmentFilters, setEnrollmentFilters] = useState({
+    fromDate: "",
+    toDate: "",
+  });
+  const [districtFilter, setDistrictFilter] = useState("");
+  const [departmentFilter, setDepartmentFilter] = useState("");
+  const [dispatchFilters, setDispatchFilters] = useState({
+    fromDate: "",
+    toDate: "",
+  });
+
+  const handleViewComplaint = (complaintId) => {
+    if (!complaintId) return;
+    navigate(`/lokayukt/all-complaints/view/${complaintId}`);
+  };
+
+  const getDistirct = async () => {
+    const res = await api.get("/lokayukt/all-district");
+    return res.data.data;
+  };
+
+  const { data: allDistrict } = useQuery({
+    queryKey: ["all-district"],
+    queryFn: getDistirct,
+  });
+
+  const enrolmentDateWise = async () => {
+    const res = await api.get("/lokayukt/enrolment-date-wise");
+    return res.data.data;
+  };
+
+  const { data: enrolmentDate, isLoading: enrollmentLoading } = useQuery({
+    queryKey: ["enrolment-date-wise"],
+    queryFn: enrolmentDateWise,
+  });
+
+  const getDistictData = async () => {
+    const res = await api.get("/lokayukt/dist-wise-compliant");
+    return res.data.data;
+  };
+
+  const { data: districtViseData, isLoading: districtLoading } = useQuery({
+    queryKey: ["dist-wise-compliant"],
+    queryFn: getDistictData,
+  });
+
+  const departmentReport = async () => {
+    const res = await api.get("/lokayukt/department-wise-report");
+    return res.data.data;
+  };
+
+  const { data: departmentData, isLoading: departmentLoading } = useQuery({
+    queryKey: ["department-wise-report"],
+    queryFn: departmentReport,
+  });
+
+  const dispatchReport = async () => {
+    const res = await api.get("/lokayukt/dispatch-report");
+    return res.data.data;
+  };
+
+  const { data: dispatcheData } = useQuery({
+    queryKey: ["dispatch-report"],
+    queryFn: dispatchReport,
+  });
+
+  const getPendencyReport = async () => {
+    const res = await api.get("/lokayukt/pendency-report");
+    return res.data.data;
+  };
+
+  const { data: pendencyData, isLoading: pendencyLoading } = useQuery({
+    queryKey: ["pendency-report"],
+    queryFn: getPendencyReport,
+  });
+
+  const getoverallStatus = async () => {
+    const res = await api.get("/lokayukt/over-all-status");
+    return res.data;
+  };
+
+  const { data: overallStatusData } = useQuery({
+    queryKey: ["over-all-status"],
+    queryFn: getoverallStatus,
+  });
+
+  const getAllDispatchLetters = async () => {
+    const res = await api.get("/lokayukt/all-dispatch-letters");
+    return res.data;
+  };
+
+  const { data: dispatchLettersData, isLoading: isLettersLoading } = useQuery({
+    queryKey: ["all-dispatch-letters"],
+    queryFn: getAllDispatchLetters,
+  });
+
+  const lettersList = dispatchLettersData?.data || [];
+  const dispatchLast = dispatchPage * itemsPerPage;
+  const dispatchFirst = dispatchLast - itemsPerPage;
+  const dispatchCurrent = lettersList.slice(dispatchFirst, dispatchLast);
+  const dispatchTotalPages = Math.ceil(lettersList.length / itemsPerPage);
+  
+  const pendencyList = pendencyData || [];
+  const pendencyLast = pendencyPage * itemsPerPage;
+  const pendencyFirst = pendencyLast - itemsPerPage;
+  const pendencyCurrent = pendencyList.slice(pendencyFirst, pendencyLast);
+  const pendencyTotalPages = Math.ceil(pendencyList.length / itemsPerPage);
+
+  useEffect(() => {
+    setPendencyPage(1);
+  }, [pendencyList]);
+
+  const formatDate = (dateString) => {
+    if (!dateString) return "उपलब्ध नहीं";
+    return new Date(dateString).toLocaleDateString("en-IN", {
+      day: "numeric",
+      month: "numeric",
+      year: "numeric",
+    });
+  };
+
+  const getComplaintNo = (id) => {
+    if (!id) return "उपलब्ध नहीं";
+    const found = complainList.find((c) => c.id == id);
+    return found ? found.compNo : "उपलब्ध नहीं";
+  };
+
+  const getAllComplainsID = async () => {
+    const res = await api.get("/lokayukt/all-complain-ids");
+    return res.data;
+  };
+
+  const { data: complainIdsData } = useQuery({
+    queryKey: ["all-complain-ids"],
+    queryFn: getAllComplainsID,
+  });
+
+  const complainList = complainIdsData?.data || [];
+
+  const normalizePath = (filePath) => {
+    if (!filePath) return "";
+    return filePath.replace(/^\/+/, "");
+  };
+
+  const makeFileUrl = (filePath) => {
+    const root = BASE_URL.replace("/api", "");
+    const fixedPath = normalizePath(filePath);
+    return `${root}/${fixedPath}`;
+  };
+
+  const handleViewPdf = async (filename, complaintId) => {
+    try {
+      setLoadingDoc(filename);
+      setPdfViewUrl(null);
+
+      const res = await api.get(`/lokayukt/get-file-preview/${complaintId}`);
+
+      if (res.data.status && res.data.data?.length > 0) {
+        const filePath = res.data.data[0];
+        const url = makeFileUrl(filePath);
+        setPdfViewUrl(url);
+      } else {
+        toast.error("File not found");
+      }
+    } catch (e) {
+      toast.error("PDF open nahi ho pa raha");
+    } finally {
+      setLoadingDoc(null);
+    }
+  };
+
+  const filteredEnrollmentData = useMemo(() => {
+    if (!enrolmentDate) return [];
+    return enrolmentDate.filter((item) => {
+      if (!enrollmentFilters.fromDate && !enrollmentFilters.toDate) return true;
+      const itemDate = new Date(item.created_at);
+      const from = enrollmentFilters.fromDate ? new Date(enrollmentFilters.fromDate) : null;
+      const to = enrollmentFilters.toDate ? new Date(enrollmentFilters.toDate) : null;
+
+      if (from && itemDate < from) return false;
+      if (to && itemDate > to) return false;
+      return true;
+    });
+  }, [enrolmentDate, enrollmentFilters]);
+
+  const enrollmentLast = enrollmentPage * itemsPerPage;
+  const enrollmentFirst = enrollmentLast - itemsPerPage;
+  const enrollmentCurrent = filteredEnrollmentData.slice(enrollmentFirst, enrollmentLast);
+  const enrollmentTotalPages = Math.ceil(filteredEnrollmentData.length / itemsPerPage);
+
+const filteredDistrictData = useMemo(() => {
+  if (!districtViseData) return [];
+
+  if (!districtFilter) return districtViseData;
+
+  return districtViseData.filter(
+    (item) =>
+      item.district_name === districtFilter ||
+      item.district === districtFilter
+  );
+}, [districtViseData, districtFilter]);
+  const districtLast = districtPage * itemsPerPage;
+  const districtFirst = districtLast - itemsPerPage;
+  const districtCurrent = filteredDistrictData.slice(districtFirst, districtLast);
+  const districtTotalPages = Math.ceil(filteredDistrictData.length / itemsPerPage);
+
+ const filteredDepartmentData = useMemo(() => {
+  if (!departmentData) return [];
+
+  if (!departmentFilter) return departmentData;
+
+  return departmentData.filter(
+    (item) => item.department === departmentFilter
+  );
+}, [departmentData, departmentFilter]);
+
+  const departmentLast = departmentPage * itemsPerPage;
+  const departmentFirst = departmentLast - itemsPerPage;
+  const departmentCurrent = filteredDepartmentData.slice(departmentFirst, departmentLast);
+  const departmentTotalPages = Math.ceil(filteredDepartmentData.length / itemsPerPage);
+
+  const filteredDispatchData = useMemo(() => {
+    if (!dispatcheData) return [];
+    return dispatcheData.filter((item) => {
+      if (!dispatchFilters.fromDate && !dispatchFilters.toDate) return true;
+      const itemDate = new Date(item.created_at);
+      const from = dispatchFilters.fromDate ? new Date(dispatchFilters.fromDate) : null;
+      const to = dispatchFilters.toDate ? new Date(dispatchFilters.toDate) : null;
+
+      if (from && itemDate < from) return false;
+      if (to && itemDate > to) return false;
+      return true;
+    });
+  }, [dispatcheData, dispatchFilters]);
+
+  useEffect(() => {
+    setEnrollmentPage(1);
+  }, [filteredEnrollmentData]);
+  useEffect(() => {
+    setDistrictPage(1);
+  }, [filteredDistrictData]);
+  useEffect(() => {
+    setDepartmentPage(1);
+  }, [filteredDepartmentData]);
+  useEffect(() => {
+    setDispatchPage(1);
+  }, [lettersList]);
+
+  const prepareEnrollmentDataForExport = (data) => {
+    return data.map((item, index) => ({
+      "S.No": index + 1,
+      "Complaint No.": item.complain_no || "उपलब्ध नहीं",
+      "Enrollment Date": item.created_at || "उपलब्ध नहीं",
+      District: item.district_name ? item.district_name : "miyC/k ugha",
+      Department: item.department_name ? item.department_name : "miyC/k ugha",
+      Complainant: item.complainant_name ? item.complainant_name : "miyC/k ugha",
+      Nature: item.category || "उपलब्ध नहीं",
+      Status: item.status || "उपलब्ध नहीं",
+    }));
+  };
+
+  const exportToExcel = async (data, fileName) => {
+    if (!data || data.length === 0) {
+      alert("No data to export");
+      return;
+    }
+
+    setExportingExcel(true);
+    await new Promise((resolve) => setTimeout(resolve, 300));
+
+    try {
+      const ws = XLSX.utils.json_to_sheet(data);
+
+      const krutiColumns = ["District", "Department", "Complainant"];
+
+      const cols = Object.keys(data[0]).map((key) => {
+        const maxLength = Math.max(
+          ...data.map((row) => (row[key] ? row[key].toString().length : 0)),
+          key.length
+        );
+        return { wch: Math.min(maxLength + 5, 50) };
+      });
+      ws["!cols"] = cols;
+
+      const range = XLSX.utils.decode_range(ws['!ref']);
+      
+      for (let R = range.s.r; R <= range.e.r; ++R) {
+        for (let C = range.s.c; C <= range.e.c; ++C) {
+          const cellAddress = { c: C, r: R };
+          const cellRef = XLSX.utils.encode_cell(cellAddress);
+          
+          if (!ws[cellRef]) continue;
+
+          const headerCell = ws[XLSX.utils.encode_cell({ c: C, r: 0 })];
+          const columnName = headerCell ? headerCell.v : "";
+
+          if (R > 0 && krutiColumns.includes(columnName)) {
+            ws[cellRef].s = {
+              font: {
+                name: "Kruti Dev 010", 
+                sz: 12
+              }
+            };
+          } else {
+             ws[cellRef].s = { font: { name: "Arial", sz: 10 } };
+          }
+        }
+      }
+
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Sheet1");
+      XLSX.writeFile(wb, `${fileName}.xlsx`);
+    } catch (error) {
+      console.error("Excel export failed", error);
+      toast.error("Failed to generate Excel");
+    } finally {
+      setExportingExcel(false);
+    }
+  };
+
+  const exportToPDF = async (data, fileName) => {
+    if (!data || data.length === 0) {
+      alert("No data to export");
+      return;
+    }
+
+    setExportingPdf(true);
+    await new Promise((resolve) => setTimeout(resolve, 300));
+
+    try {
+      const krutiColumns = ["District", "Department", "Complainant"];
+
+      let html = `
+        <div style="padding: 10px;">
+          <h2 style="text-align:center; font-family: sans-serif; margin-bottom: 15px; color: #333;">${fileName}</h2>
+          <table style="border-collapse:collapse; width:100%; font-size:11px; font-family: sans-serif; table-layout: auto;">
+            <thead style="background-color:#f0f0f0;">
+              <tr>`;
+
+      const keys = Object.keys(data[0]);
+      keys.forEach((key) => {
+        html += `<th style="border: 1px solid #ddd; padding:8px; text-align:left; word-wrap: break-word;">${key}</th>`;
+      });
+
+      html += `</tr></thead><tbody>`;
+
+      data.forEach((row) => {
+        html += `<tr style="page-break-inside: avoid;">`; 
+        keys.forEach((key) => {
+          const isKruti = krutiColumns.includes(key);
+          const fontStyle = isKruti ? "font-family: 'Kruti Dev 010', 'Kruti Dev', sans-serif; font-size: 14px;" : "font-family: sans-serif;";
+          const className = isKruti ? "kruti-input" : "";
+
+          html += `<td class="${className}" style="border: 1px solid #ddd; padding:8px; word-wrap: break-word; overflow-wrap: break-word; max-width: 150px; ${fontStyle}">${row[key]}</td>`;
+        });
+        html += `</tr>`;
+      });
+
+      html += `</tbody></table>
+        </div>`;
+
+      const element = document.createElement("div");
+      element.innerHTML = html;
+
+      const opt = {
+        margin: [15, 10, 15, 10], 
+        filename: `${fileName}.pdf`,
+        image: { type: "jpeg", quality: 0.98 },
+        html2canvas: { 
+          scale: 2, 
+          useCORS: true,
+          letterRendering: true 
+        },
+        pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }, 
+        jsPDF: { unit: "mm", format: "a4", orientation: "landscape" },
+      };
+
+      await html2pdf().set(opt).from(element).save();
+    } catch (error) {
+      console.error("PDF export failed", error);
+      toast.error("Failed to generate PDF");
+    } finally {
+      setExportingPdf(false);
+    }
+  };
+
+  const overallStats = {
+    total: overallStatusData?.data?.total || "उपलब्ध नहीं",
+    disposed: 450,
+    pending: 800,
+    rejection: 15,
+  };
+
+  const grandTotalPercentage = overallStatusData?.percentages?.total_percentage ?? 0;
+
+  const statusBreakdown = [
+    {
+      status: "Pending with Dept",
+      count: overallStatusData?.data?.pending_with_department || "उपलब्ध नहीं",
+      percentage: overallStatusData?.percentages?.pending_with_department || "उपलब्ध नहीं",
+      color: "text-orange-600",
+      bg: "bg-orange-100",
+    },
+    {
+      status: "Under Investigation",
+      count: overallStatusData?.data?.under_investigation || "उपलब्ध नहीं",
+      percentage: overallStatusData?.percentages?.under_investigation ?? "उपलब्ध नहीं",
+      color: "text-blue-600",
+      bg: "bg-blue-100",
+    },
+    {
+      status: "Final Report Submitted",
+      count: overallStatusData?.data?.final_submit || "उपलब्ध नहीं",
+      percentage: overallStatusData?.percentages?.final_submit ?? "उपलब्ध नहीं",
+      color: "text-purple-600",
+      bg: "bg-purple-100",
+    },
+    {
+      status: "Disposed",
+      count: overallStatusData?.data?.disposed || "उपलब्ध नहीं",
+      percentage: overallStatusData?.percentages?.disposed ?? "उपलब्ध नहीं",
+      color: "text-green-600",
+      bg: "bg-green-100",
+    },
+    {
+      status: "Rejected",
+      count: overallStatusData?.data?.rejected || "उपलब्ध नहीं",
+      percentage: overallStatusData?.percentages?.rejected ?? "उपलब्ध नहीं",
+      color: "text-red-600",
+      bg: "bg-red-100",
+    },
+    {
+      status: "Pull Back",
+      count: overallStatusData?.data?.pull_back || "उपलब्ध नहीं",
+      percentage: overallStatusData?.percentages?.pull_back ?? "उपलब्ध नहीं",
+      color: "text-red-600",
+      bg: "bg-red-100",
+    },
+    {
+      status: "Return Complain",
+      count: overallStatusData?.data?.return_complain || "उपलब्ध नहीं",
+      percentage: overallStatusData?.percentages?.return_complain ?? "उपलब्ध नहीं",
+      color: "text-red-600",
+      bg: "bg-red-100",
+    },
+  ];
+
+  const tabs = [
+    { id: "enrollment", label: "Enrollment Date-wise", icon: <FaCalendarAlt /> },
+    { id: "district", label: "District-wise", icon: <FaMapMarkerAlt /> },
+    { id: "department", label: "Department-wise", icon: <FaBuilding /> },
+    { id: "pendency", label: "Pendency Report", icon: <FaClock /> },
+    { id: "dispatch", label: "Dispatch Register", icon: <FaPaperPlane /> },
+    { id: "overall", label: "Overall Status", icon: <FaChartPie /> },
+  ];
+
+  // --- DATA TABLE CUSTOM STYLES & COLUMNS ---
+  const customTableStyles = {
+    headRow: {
+      style: {
+        backgroundColor: '#f9fafb',
+        borderBottom: '1px solid #e5e7eb',
+        color: '#374151',
+        fontSize: '0.75rem',
+        fontWeight: 'bold',
+        textTransform: 'uppercase',
+      },
+    },
+    headCells: {
+      style: {
+        paddingLeft: '24px',
+        paddingRight: '24px',
+      },
+    },
+    cells: {
+      style: {
+        fontSize: '0.875rem',
+        color: '#4b5563',
+        paddingTop: '16px',
+        paddingBottom: '16px',
+        paddingLeft: '24px',
+        paddingRight: '24px',
+      },
+    },
+  };
+
+  const enrollmentColumns = useMemo(() => [
+    { name: 'S.No', selector: (row, index) => (enrollmentPage - 1) * itemsPerPage + index + 1, width: '80px' },
+    { name: 'Complaint No.', selector: row => row?.complain_no || "", sortable: true, cell: row => <span onClick={() => handleViewComplaint(row.id)} className="font-medium text-blue-600 hover:underline cursor-pointer">{row?.complain_no || "उपलब्ध नहीं"}</span>, minWidth: '150px' },
+    { name: 'Enrollment Date', selector: row => row?.created_at || "उपलब्ध नहीं", sortable: true, minWidth: '150px' },
+    { name: 'District', selector: row => row?.district_name || "", sortable: true, cell: row => <span className="kruti-input text-[16px]">{row?.district_name || "miyC/k ugha"}</span>, minWidth: '130px' },
+    { name: 'Department', selector: row => row?.department_name || "", sortable: true, cell: row => <span className="kruti-input text-[16px]">{row?.department_name || "miyC/k ugha"}</span>, minWidth: '200px' },
+    { name: 'Complainant', selector: row => row?.complainant_name || "", sortable: true, cell: row => <span className="kruti-input text-[16px]">{row?.complainant_name || "miyC/k ugha"}</span>, minWidth: '180px' },
+    { name: 'Nature', selector: row => row?.category || "", sortable: true, cell: row => <span className="px-2 py-1 rounded-full bg-gray-100 text-xs border border-gray-200">{row?.category || "उपलब्ध नहीं"}</span>, minWidth: '120px' },
+    { name: 'Status', selector: row => row?.status || "", sortable: true, cell: row => <span className="px-2 py-1 rounded-full bg-blue-100 text-blue-800 text-xs font-medium">{row?.status || "उपलब्ध नहीं"}</span>, minWidth: '120px' },
+  ], [enrollmentPage, itemsPerPage]);
+
+  const districtColumns = useMemo(() => [
+    { name: 'District', selector: row => row.district || "", sortable: true, cell: row => <span className="kruti-input text-[16px] font-medium text-gray-900">{row.district || "miyC/k ugha"}</span> },
+    { name: 'Total', selector: row => row.total || "0", sortable: true, right: true },
+    { name: 'Pending', selector: row => row.pending || 0, sortable: true, cell: row => <span className="text-orange-600 font-medium">{row.pending || "उपलब्ध नहीं"}</span>, right: true },
+    { name: 'Disposed', selector: row => row.disposed || 0, sortable: true, cell: row => <span className="text-green-600 font-medium">{row.disposed || "उपलब्ध नहीं"}</span>, right: true },
+  ], []);
+
+  const departmentColumns = useMemo(() => [
+    { name: 'Department', selector: row => row.department || "", sortable: true, cell: row => <span className="kruti-input text-[16px] font-medium text-gray-900">{row.department || "miyC/k ugha"}</span>, minWidth: '300px' },
+    { name: 'Total', selector: row => row.total || "0", sortable: true, right: true },
+    { name: 'Pending', selector: row => row.pending || 0, sortable: true, cell: row => <span className="text-orange-600 font-medium">{row.pending || "0"}</span>, right: true },
+    { name: 'Disposed', selector: row => row.disposed || 0, sortable: true, cell: row => <span className="text-green-600 font-medium">{row.disposed || "0"}</span>, right: true },
+  ], []);
+
+  const pendencyColumns = useMemo(() => [
+    { name: 'S.No', selector: (row, index) => (pendencyPage - 1) * itemsPerPage + index + 1, width: '80px' },
+    { name: 'Complaint No.', selector: row => row.complain_no || "", sortable: true, cell: row => <span onClick={() => handleViewComplaint(row.id)} className="font-medium text-blue-600 hover:underline cursor-pointer">{row.complain_no || "उपलब्ध नहीं"}</span>, minWidth: '150px' },
+    { name: 'Enrollment Date', selector: row => row.created_at || "उपलब्ध नहीं", sortable: true, minWidth: '150px' },
+    { name: 'Pending Days', selector: row => row.pending_days || 0, sortable: true, cell: row => <span className="font-bold text-orange-600">{row.pending_days ?? "उपलब्ध नहीं"}</span>, center: true },
+    { name: 'Pending At', selector: row => row.pending_at || "", sortable: true, cell: row => <span className="px-2 py-1 rounded-full bg-gray-100 text-xs border border-gray-200">{row.pending_at || "उपलब्ध नहीं"}</span>, minWidth: '150px' },
+    { name: 'User Name', selector: row => row.pending_user_name || "", sortable: true, cell: row => <span className="text-gray-700 font-medium">{row.pending_user_name || "उपलब्ध नहीं"}</span>, minWidth: '150px' },
+  ], [pendencyPage, itemsPerPage]);
+
+  const dispatchColumns = useMemo(() => [
+    { name: 'Scan Date', selector: row => formatDate(row.created_at), sortable: true, minWidth: '120px' },
+    { name: 'Letter No.', selector: row => row.letter_no || "", sortable: true, cell: row => <span className="text-gray-900 font-medium">{row.letter_no || "उपलब्ध नहीं"}</span>, minWidth: '120px' },
+    { name: 'Complaint No.', selector: row => getComplaintNo(row.complaint_id) || "", sortable: true, cell: row => <span className="text-blue-600 hover:underline cursor-pointer">{getComplaintNo(row.complaint_id)}</span>, minWidth: '150px' },
+    { name: 'Type', selector: row => row.letter_type || "उपलब्ध नहीं", sortable: true },
+    { name: 'Subject', selector: row => row.subject || "", sortable: true, cell: row => <span className="kruti-input text-gray-800 max-w-xs truncate">{row.subject || "उपलब्ध नहीं"}</span>, minWidth: '200px' },
+    { name: 'Medium', selector: row => row.Medium || "", sortable: true, cell: row => <span className="text-gray-800 max-w-xs truncate">{row.Medium || "उपलब्ध नहीं"}</span> },
+    { name: 'View', cell: row => (
+      <button List 
+        onClick={() => handleViewPdf(row.file, row.complaint_id)} 
+        disabled={loadingDoc === row.file} 
+        className="flex items-center gap-1 px-3 py-1.5 text-sm text-blue-700 border border-blue-300 rounded-lg"
+      >
+        {loadingDoc === row.file ? <FaSpinner className="w-4 h-4 animate-spin" /> : <FaEye className="w-4 h-4" />} View
+      </button>
+    ), minWidth: '120px' }
+  ], [loadingDoc, complainList]);
+
+  const LoadingState = () => (
+    <div className="py-20 text-center text-gray-600 flex flex-col items-center">
+      <span>Loading...</span>
+    </div>
+  );
+
+  const EmptyState = () => (
+    <div className="py-10 text-center text-gray-500">
+      No Data Found.
+    </div>
+  );
+
+  return (
+    <div className="min-h-screen bg-gray-50  pb-20 md:pb-6">
+      <div className="mb-6">
+        <h1 className="text-xl md:text-2xl font-bold text-gray-800 flex items-center gap-2">
+          Reports
+        </h1>
+        <p className="text-gray-500 text-xs md:text-sm mt-1">
+          Generate and export case reports
+        </p>
+      </div>
+
+      <div className="flex overflow-x-auto gap-2 border-b border-gray-200 mb-6 pb-1 scrollbar-hide -mx-4 px-4 md:mx-0 md:px-0">
+        {tabs.map((tab) => (
+          <button
+            key={tab.id}
+            onClick={() => setActiveTab(tab.id)}
+            className={`flex items-center gap-2 px-4 py-3 text-sm font-medium whitespace-nowrap transition-colors duration-200 flex-shrink-0 ${
+              activeTab === tab.id
+                ? "text-blue-700 border-b-2 border-blue-600 bg-blue-50/50 rounded-t-lg"
+                : "text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg"
+            }`}
+          >
+            {tab.icon}
+            {tab.label}
+          </button>
+        ))}
+      </div>
+
+      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 md:p-6 min-h-[500px]">
+        {activeTab === "enrollment" && (
+          <div>
+            <h2 className="text-base md:text-lg font-semibold text-gray-800 mb-4 md:mb-6">
+              Enrollment Date-wise List / पंजीकरण तिथि अनुसार सूची
+            </h2>
+
+            <div className="flex flex-col sm:flex-row flex-wrap items-end gap-3 md:gap-4 mb-6 bg-gray-50 p-4 rounded-lg border border-gray-100">
+              <div className="w-full sm:w-auto">
+                <label className="block text-xs font-medium text-gray-500 mb-1">
+                  From Date
+                </label>
+                <input
+                  type="date"
+                  value={enrollmentFilters.fromDate}
+                  onChange={(e) =>
+                    setEnrollmentFilters({
+                      ...enrollmentFilters,
+                      fromDate: e.target.value,
+                    })
+                  }
+                  className="bg-white border border-gray-300 text-gray-800 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full sm:w-40 p-2.5"
+                />
+              </div>
+              <div className="w-full sm:w-auto">
+                <label className="block text-xs font-medium text-gray-500 mb-1">
+                  To Date
+                </label>
+                <input
+                  type="date"
+                  value={enrollmentFilters.toDate}
+                  onChange={(e) =>
+                    setEnrollmentFilters({
+                      ...enrollmentFilters,
+                      toDate: e.target.value,
+                    })
+                  }
+                  className="bg-white border border-gray-300 text-gray-800 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full sm:w-40 p-2.5"
+                />
+              </div>
+
+              <div className="flex gap-2 w-full sm:w-auto mt-2 sm:mt-0">
+                <button
+                  onClick={() => {
+                    const formattedData = prepareEnrollmentDataForExport(
+                      filteredEnrollmentData,
+                    );
+                    exportToPDF(formattedData, "Enrollment_Report");
+                  }}
+                  disabled={exportingPdf || enrollmentLoading}
+                  className="flex-1 sm:flex-none justify-center flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50"
+                >
+                  {exportingPdf ? (
+                    <>
+                      <FaSpinner className="animate-spin text-red-500" />{" "}
+                      Loading...
+                    </>
+                  ) : (
+                    <>
+                      <FaFilePdf className="text-red-500" /> PDF
+                    </>
+                  )}
+                </button>
+
+                <button
+                  onClick={() => {
+                    const formattedData = prepareEnrollmentDataForExport(
+                      filteredEnrollmentData,
+                    );
+                    exportToExcel(formattedData, "Enrollment_Report");
+                  }}
+                  disabled={exportingExcel || enrollmentLoading}
+                  className="flex-1 sm:flex-none justify-center flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50"
+                >
+                  {exportingExcel ? (
+                    <>
+                      <FaSpinner className="animate-spin text-green-600" />{" "}
+                      Loading...
+                    </>
+                  ) : (
+                    <>
+                      <FaFileExcel className="text-green-600" /> Excel
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+
+            <div className="overflow-x-auto -mx-4 md:mx-0 border border-gray-200 rounded-md">
+              <DataTable
+                columns={enrollmentColumns}
+                data={enrollmentCurrent}
+                customStyles={customTableStyles}
+                progressPending={enrollmentLoading}
+                progressComponent={<LoadingState />}
+                noDataComponent={<EmptyState />}
+                highlightOnHover
+                responsive
+              />
+            </div>
+            
+            <div className="mt-4">
+              <Pagination
+                currentPage={enrollmentPage}
+                totalPages={enrollmentTotalPages}
+                onPageChange={setEnrollmentPage}
+                totalItems={filteredEnrollmentData.length}
+                itemsPerPage={itemsPerPage}
+              />
+            </div>
+          </div>
+        )}
+
+        {activeTab === "district" && (
+          <div>
+            <h2 className="text-base md:text-lg font-semibold text-gray-800 mb-6">
+              District-wise List / जिलेवार सूची
+            </h2>
+
+            <div className="flex flex-col sm:flex-row flex-wrap items-end gap-3 md:gap-4 mb-6 bg-gray-50 p-4 rounded-lg border border-gray-100">
+              <div className="w-full sm:flex-1 min-w-[200px]">
+                <label className="block text-xs font-medium text-gray-500 mb-1">
+                  District / जिला
+                </label>
+<select
+  value={districtFilter}
+  onChange={(e) => setDistrictFilter(e.target.value)}
+  className="bg-white border border-gray-300 rounded-lg w-full p-2.5 kruti-input text-[16px]"
+>
+  <option value="">
+    lHkh ftys
+  </option>
+
+  {allDistrict?.map((item, index) => (
+    <option
+      key={index}
+      value={item.district_name}
+    >
+      {item.district_name}
+    </option>
+  ))}
+</select>
+              </div>
+              <div className="flex gap-2 w-full sm:w-auto mt-2 sm:mt-0">
+                <button
+                  onClick={() => {
+                  const data = filteredDistrictData.map((item, idx) => ({
+                    "S.No": idx + 1,
+                    District: item.district || item.district_name || "miyC/k ugha",
+                    Total: item.total || 0,
+                    Pending: item.pending || 0,
+                    Disposed: item.disposed || 0,
+                  }));
+                    exportToPDF(data, "District_Report");
+                  }}
+                  disabled={exportingPdf || districtLoading}
+                  className="flex-1 sm:flex-none justify-center flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50"
+                >
+                  {exportingPdf ? (
+                    <FaSpinner className="animate-spin text-red-500" />
+                  ) : (
+                    <FaFilePdf className="text-red-500" />
+                  )}{" "}
+                  PDF
+                </button>
+
+                <button
+                  onClick={() => {
+                    const data = filteredDistrictData.map((item, idx) => ({
+                      "S.No": idx + 1,
+                      District: item.district || item.district_name || "उपलब्ध नहीं",
+                      Total: item.total || 0,
+                      Pending: item.pending || 0,
+                      Disposed: item.disposed || 0,
+                    }));
+                    exportToExcel(data, "District_Report");
+                  }}
+                  disabled={exportingExcel || districtLoading}
+                  className="flex-1 sm:flex-none justify-center flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50"
+                >
+                  {exportingExcel ? (
+                    <FaSpinner className="animate-spin text-green-600" />
+                  ) : (
+                    <FaFileExcel className="text-green-600" />
+                  )}{" "}
+                  Excel
+                </button>
+              </div>
+            </div>
+
+            <div className="bg-blue-50 p-3 rounded-t-lg border border-b-0 border-blue-100 mb-0">
+              <h3 className="text-sm font-semibold text-gray-700">
+                District Summary / जिला सारांश
+              </h3>
+            </div>
+            <div className="overflow-x-auto -mx-4 md:mx-0 border border-gray-200 rounded-b-md">
+              <DataTable
+                columns={districtColumns}
+                data={districtCurrent}
+                customStyles={customTableStyles}
+                progressPending={districtLoading}
+                progressComponent={<LoadingState />}
+                noDataComponent={<EmptyState />}
+                highlightOnHover
+                responsive
+              />
+            </div>
+            <div className="mt-4">
+              <Pagination
+                currentPage={districtPage}
+                totalPages={districtTotalPages}
+                onPageChange={setDistrictPage}
+                totalItems={filteredDistrictData.length}
+                itemsPerPage={itemsPerPage}
+              />
+            </div>
+          </div>
+        )}
+
+        {activeTab === "department" && (
+          <div>
+            <h2 className="text-base md:text-lg font-semibold text-gray-800 mb-6">
+              Department-wise List / विभागवार सूची
+            </h2>
+            <div className="flex flex-col sm:flex-row flex-wrap items-end gap-3 md:gap-4 mb-6 bg-gray-50 p-4 rounded-lg border border-gray-100">
+              <div className="w-full sm:flex-1 min-w-[200px]">
+                <label className="block text-xs font-medium text-gray-500 mb-1">
+                  Department / विभाग
+                </label>
+             <select
+  value={departmentFilter}
+  onChange={(e) => setDepartmentFilter(e.target.value)}
+  className="bg-white border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 kruti-input text-[16px] text-gray-900"
+>
+  <option
+    value=""
+    className="kruti-input text-[16px] text-gray-900"
+  >
+    lHkh foHkkx
+  </option>
+
+  {departmentData?.map((item, index) => (
+    <option
+      key={index}
+      value={item.department}
+      className="kruti-input text-[16px] text-gray-900"
+    >
+      {item.department}
+    </option>
+  ))}
+</select>
+              </div>
+              <div className="flex gap-2 w-full sm:w-auto mt-2 sm:mt-0">
+                <button
+                  onClick={() => {
+                    const data = filteredDepartmentData.map((item, idx) => ({
+                      "S.No": idx + 1,
+                      Department: item.department || "miyC/k ugha",
+                      Type: item.type || "उपलब्ध नहीं",
+                      Total: item.total || 0,
+                      Pending: item.pending || 0,
+                      Disposed: item.disposed || 0,
+                    }));
+                    exportToPDF(data, "Department_Report");
+                  }}
+                  disabled={exportingPdf || departmentLoading}
+                  className="flex-1 sm:flex-none justify-center flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50"
+                >
+                  {exportingPdf ? (
+                    <FaSpinner className="animate-spin text-red-500" />
+                  ) : (
+                    <FaFilePdf className="text-red-500" />
+                  )}{" "}
+                  PDF
+                </button>
+                <button
+                  onClick={() => {
+                    const data = filteredDepartmentData.map((item, idx) => ({
+                      "S.No": idx + 1,
+                      Department: item.department || "उपलब्ध नहीं",
+                      Type: item.type || "उपलब्ध नहीं",
+                      Total: item.total || 0,
+                      Pending: item.pending || 0,
+                      Disposed: item.disposed || 0,
+                    }));
+                    exportToExcel(data, "Department_Report");
+                  }}
+                  disabled={exportingExcel || departmentLoading}
+                  className="flex-1 sm:flex-none justify-center flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50"
+                >
+                  {exportingExcel ? (
+                    <FaSpinner className="animate-spin text-green-600" />
+                  ) : (
+                    <FaFileExcel className="text-green-600" />
+                  )}{" "}
+                  Excel
+                </button>
+              </div>
+            </div>
+
+            <div className="overflow-x-auto -mx-4 md:mx-0 border border-gray-200 rounded-md">
+              <DataTable
+                columns={departmentColumns}
+                data={departmentCurrent}
+                customStyles={customTableStyles}
+                progressPending={departmentLoading}
+                progressComponent={<LoadingState />}
+                noDataComponent={<EmptyState />}
+                highlightOnHover
+                responsive
+              />
+            </div>
+            <div className="mt-4">
+              <Pagination
+                currentPage={departmentPage}
+                totalPages={departmentTotalPages}
+                onPageChange={setDepartmentPage}
+                totalItems={filteredDepartmentData.length}
+                itemsPerPage={itemsPerPage}
+              />
+            </div>
+          </div>
+        )}
+
+       {activeTab === "pendency" && (
+         <div>
+           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
+             <h2 className="text-base md:text-lg font-semibold text-gray-800">
+               Investigation Pendency Report / जांच लंबितता रिपोर्ट
+             </h2>
+             <div className="flex gap-2 w-full sm:w-auto">
+               <button
+                 onClick={() => {
+                   const data = pendencyList.map((item, idx) => ({
+                     "S.No": idx + 1,
+                     "Complaint No.": item.complain_no || "उपलब्ध नहीं",
+                     "Enrollment Date": item.created_at || "उपलब्ध नहीं",
+                     "Pending Days": item.pending_days || 0,
+                     "Pending At": item.pending_at || "उपलब्ध नहीं",
+                     "User Name": item.pending_user_name || "उपलब्ध नहीं",
+                   }));
+                   exportToPDF(data, "Pendency_Report");
+                 }}
+                 disabled={exportingPdf || pendencyLoading}
+                 className="flex-1 sm:flex-none justify-center flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50"
+               >
+                 {exportingPdf ? <FaSpinner className="animate-spin text-red-500" /> : <FaFilePdf className="text-red-500" />} PDF
+               </button>
+
+               <button
+                 onClick={() => {
+                   const data = pendencyList.map((item, idx) => ({
+                     "S.No": idx + 1,
+                     "Complaint No.": item.complain_no || "उपलब्ध नहीं",
+                     "Enrollment Date": item.created_at || "उपलब्ध नहीं",
+                     "Pending Days": item.pending_days || 0,
+                     "Pending At": item.pending_at || "उपलब्ध नहीं",
+                     "User Name": item.pending_user_name || "उपलब्ध नहीं",
+                   }));
+                   exportToExcel(data, "Pendency_Report");
+                 }}
+                 disabled={exportingExcel || pendencyLoading}
+                 className="flex-1 sm:flex-none justify-center flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50"
+               >
+                  {exportingExcel ? <FaSpinner className="animate-spin text-green-600" /> : <FaFileExcel className="text-green-600" />} Excel
+               </button>
+             </div>
+           </div>
+
+           <div className="overflow-x-auto -mx-4 md:mx-0 border border-gray-200 rounded-md">
+             <DataTable
+                columns={pendencyColumns}
+                data={pendencyCurrent}
+                customStyles={customTableStyles}
+                progressPending={pendencyLoading}
+                progressComponent={<LoadingState />}
+                noDataComponent={<EmptyState />}
+                highlightOnHover
+                responsive
+              />
+           </div>
+           <div className="mt-4">
+              <Pagination
+                currentPage={pendencyPage}
+                totalPages={pendencyTotalPages}
+                onPageChange={setPendencyPage}
+                totalItems={pendencyList.length}
+                itemsPerPage={itemsPerPage}
+              />
+           </div>
+         </div>
+       )}
+
+        {activeTab === "dispatch" && (
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 md:p-6 min-h-[500px]">
+            <h2 className="text-lg font-semibold text-gray-800 mb-4 md:mb-6">
+              Scan Letters / स्कैन किए गए पत्र
+            </h2>
+
+            <div className="overflow-x-auto border border-gray-200 rounded-md">
+              <DataTable
+                columns={dispatchColumns}
+                data={dispatchCurrent}
+                customStyles={customTableStyles}
+                progressPending={isLettersLoading}
+                progressComponent={<LoadingState />}
+                noDataComponent={<EmptyState />}
+                highlightOnHover
+                responsive
+              />
+            </div>
+            <div className="mt-4">
+              <Pagination
+                currentPage={dispatchPage}
+                totalPages={dispatchTotalPages}
+                onPageChange={setDispatchPage}
+                totalItems={lettersList.length}
+                itemsPerPage={itemsPerPage}
+              />
+            </div>
+          </div>
+        )}
+
+        {pdfViewUrl && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-lg w-full max-w-5xl h-[90vh] flex flex-col">
+              <div className="flex items-center justify-between p-4 border-b">
+                <h3 className="text-lg font-semibold">PDF Viewer</h3>
+                <button onClick={() => setPdfViewUrl(null)}>
+                  <FaTimes />
+                </button>
+              </div>
+
+              <iframe
+                src={`${pdfViewUrl}#zoom=page-width`}
+                className="w-full h-full border-0"
+              />
+            </div>
+          </div>
+        )}
+
+        {activeTab === "overall" && (
+          <div>
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-base md:text-lg font-semibold text-gray-800">
+                Overall Complaint Status / कुल शिकायत स्थिति
+              </h2>
+              <button
+                onClick={() => window.print()}
+                className="flex items-center gap-2 px-3 md:px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
+              >
+                <FaPrint />
+                <span className="hidden sm:inline">Print Summary</span>
+              </button>
+            </div>
+              <div ref={overallPrintRef} className="print-overall">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+              <div className="bg-blue-50 p-4 rounded-lg border border-blue-100 flex flex-col items-center justify-center">
+                <h3 className="text-gray-600 text-sm font-medium mb-1">
+                  Total Complaints
+                </h3>
+                <span className="text-3xl font-bold text-blue-700">
+                  {overallStatusData?.data?.total}
+                </span>
+              </div>
+              <div className="bg-orange-50 p-4 rounded-lg border border-orange-100 flex flex-col items-center justify-center">
+                <h3 className="text-gray-600 text-sm font-medium mb-1">
+                  Pending
+                </h3>
+                <span className="text-3xl font-bold text-orange-600">
+                  {overallStatusData?.data?.in_progress}
+                </span>
+              </div>
+              <div className="bg-green-50 p-4 rounded-lg border border-green-100 flex flex-col items-center justify-center">
+                <h3 className="text-gray-600 text-sm font-medium mb-1">
+                  Disposed
+                </h3>
+                <span className="text-3xl font-bold text-green-600">
+                  {overallStatusData?.data?.disposed}
+                </span>
+              </div>
+              <div className="bg-red-50 p-4 rounded-lg border border-red-100 flex flex-col items-center justify-center">
+                <h3 className="text-gray-600 text-sm font-medium mb-1">
+                  Rejections
+                </h3>
+                <span className="text-3xl font-bold text-red-600">
+                  {overallStatusData?.data?.rejected}
+                </span>
+              </div>
+              
+              {/* <div className="bg-stone-50 p-4 rounded-lg border border-stone-100 flex flex-col items-center justify-center">
+                <h3 className="text-gray-600 text-sm font-medium mb-1">
+                  Pull Back
+                </h3>
+                <span className="text-3xl font-bold text-red-600">
+                  {overallStatusData?.data?.pull_back}
+                </span>
+              </div> */}
+
+              {/* <div className="bg-yellow-50 p-4 rounded-lg border border-yellow-100 flex flex-col items-center justify-center">
+                <h3 className="text-gray-600 text-sm font-medium mb-1">
+                  Return Complain
+                </h3>
+                <span className="text-3xl font-bold text-red-600">
+                  {overallStatusData?.data?.return_complain}
+                </span>
+              </div> */}
+            </div>
+
+            <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+              <div className="bg-gray-50 px-4 md:px-6 py-4 border-b border-gray-200">
+                <h3 className="font-semibold text-gray-700 text-sm md:text-base">
+                  Detailed Status Breakdown
+                </h3>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm text-left">
+                  <thead className="bg-gray-50 text-gray-600 font-medium border-b border-gray-200">
+                    <tr>
+                      <th className="px-4 md:px-6 py-3 whitespace-nowrap">
+                        Status Category
+                      </th>
+                      <th className="px-4 md:px-6 py-3 text-right whitespace-nowrap">
+                        Count
+                      </th>
+                      <th className="px-4 md:px-6 py-3 text-right whitespace-nowrap">
+                        Percentage
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-100">
+                    {statusBreakdown.map((item, index) => (
+                      <tr key={index} className="hover:bg-gray-50">
+                        <td className="px-4 md:px-6 py-4">
+                          <div className="flex items-center gap-3">
+                            <span
+                              className={`${item.color.replace("text", "bg")}`}
+                            ></span>
+                            <span className="font-medium text-gray-700 whitespace-nowrap">
+                              {item.status}
+                            </span>
+                          </div>
+                        </td>
+                        <td className="px-4 md:px-6 py-4 text-right font-semibold text-gray-800 whitespace-nowrap">
+                          {item.count}
+                        </td>
+                        <td className="px-4 md:px-6 py-4 text-right text-gray-500 whitespace-nowrap">
+                          {item.percentage}%
+                        </td>
+                      </tr>
+                    ))}
+                    <tr className="bg-gray-50 font-bold border-t border-gray-200">
+                      <td className="px-4 md:px-6 py-4">Grand Total</td>
+                      <td className="px-4 md:px-6 py-4 text-right text-blue-700">
+                        {overallStats.total}
+                      </td>
+                      <td className="px-4 md:px-6 py-4 text-right">{grandTotalPercentage}%</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+            </div>
+          </div>
+        )}
+        
+      </div>
+    </div>
+  );
+};
+
+export default Reporting;
