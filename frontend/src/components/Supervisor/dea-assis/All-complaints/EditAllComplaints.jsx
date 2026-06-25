@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import Cookies from "js-cookie";
+
 import { useParams, useNavigate } from 'react-router-dom';
 import { 
   FaUser, 
