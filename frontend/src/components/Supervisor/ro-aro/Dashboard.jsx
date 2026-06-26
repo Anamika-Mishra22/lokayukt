@@ -13,6 +13,7 @@ import {
   FaBullseye,
   FaChartLine
 } from 'react-icons/fa';
+
 import { 
   BarChart, 
   Bar, 
