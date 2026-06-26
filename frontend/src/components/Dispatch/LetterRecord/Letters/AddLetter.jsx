@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import axios from 'axios';
 import { toast, Toaster } from 'react-hot-toast'; 
 import { FaPlus } from "react-icons/fa";
-
+import Cookies from "js-cookie";
 import { MdNoteAdd } from "react-icons/md";
 
 const BASE_URL = import.meta.env.VITE_API_BASE ?? "http://localhost:8000/api";

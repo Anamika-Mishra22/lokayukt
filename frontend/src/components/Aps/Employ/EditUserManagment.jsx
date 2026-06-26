@@ -16,6 +16,7 @@ import { toast, Toaster } from "react-hot-toast";
 // import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import axios from "axios";
+import Cookies from "js-cookie";
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query'; 
 

@@ -4,7 +4,7 @@ import { IoSearchOutline } from "react-icons/io5";
 import { useNavigate } from "react-router-dom"; 
 import { FaFolderOpen } from "react-icons/fa";
 import { TbMail } from "react-icons/tb"; 
-
+import Cookies from "js-cookie";
 
 const BASE_URL = import.meta.env.VITE_API_BASE ?? "http://localhost:8000/api";
 

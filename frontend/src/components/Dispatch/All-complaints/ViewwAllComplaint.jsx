@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
+import Cookies from "js-cookie";
 import { FaFileAlt, FaExclamationTriangle, FaTimes, FaEye,FaChevronDown } from "react-icons/fa";
 import { IoMdArrowBack } from "react-icons/io";
 // import { toast, ToastContainer } from "react-toastify";
