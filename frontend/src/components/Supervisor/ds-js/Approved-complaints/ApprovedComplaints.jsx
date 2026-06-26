@@ -3,6 +3,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import axios from "axios";
 import { ToastContainer, toast } from "react-toastify";
+import Cookies from "js-cookie";
 import "react-toastify/dist/ReactToastify.css";
 import {
   FaSearch,

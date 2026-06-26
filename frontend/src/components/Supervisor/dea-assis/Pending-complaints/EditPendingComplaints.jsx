@@ -12,6 +12,7 @@ import {
   FaCheck,
   FaTimes
 } from 'react-icons/fa';
+import Cookies from "js-cookie";
 import { IoMdArrowBack } from "react-icons/io";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";

@@ -26,6 +26,7 @@ import {
 import { FaRegEdit } from "react-icons/fa";
 import { IoMdArrowBack } from "react-icons/io";
 import { toast, ToastContainer } from "react-toastify";
+import Cookies from "js-cookie";
 import "react-toastify/dist/ReactToastify.css";
 
 const BASE_URL = import.meta.env.VITE_API_BASE ?? "http://localhost:8000/api";

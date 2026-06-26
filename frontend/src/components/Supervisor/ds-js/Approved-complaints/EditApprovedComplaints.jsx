@@ -14,6 +14,7 @@ import {
 } from 'react-icons/fa';
 import { IoMdArrowBack } from "react-icons/io";
 import { ToastContainer, toast } from "react-toastify";
+import Cookies from "js-cookie";
 import "react-toastify/dist/ReactToastify.css";
 import axios from "axios";
 

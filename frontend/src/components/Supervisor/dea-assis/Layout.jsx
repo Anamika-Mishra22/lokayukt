@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Outlet } from 'react-router-dom';
 import Sidebar from "./Sidebar"
+import Cookies from "js-cookie";
 import Header from './Header';
 
 const Layout = () => {
