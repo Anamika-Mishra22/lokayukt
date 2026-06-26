@@ -1,5 +1,6 @@
 // App.js
-import React from 'react';
+import React, { lazy, Suspense } from 'react';
+import { useState } from 'react';
 import Cookies from "js-cookie";
 
 import { Routes, Route, Navigate, useLocation  } from 'react-router-dom';
@@ -1394,21 +1395,22 @@ const queryClient = new QueryClient();
 
 
 function App() {
-  const role = Cookies.get("role");
-  const subrole = Cookies.get("subrole")
+const [role, setRole] = useState(Cookies.get("role"));
+  const [subrole, setSubrole] = useState(Cookies.get("subrole"));
 
   // const location = useLocation();
   // const isLoginPage = location.pathname === '/' || location.pathname === '/login';
 
   return (
       <QueryClientProvider client={queryClient}>
+   
 
 
       {/* {!isLoginPage && <GlobalIdleTimer />} */}
     <Routes>
       {/* Public Routes */}
-      <Route path="/" element={<Login />} />
-      <Route path="/login" element={<Login />} />
+<Route path="/" element={<Login setRole={setRole} setSubrole={setSubrole} />} />
+      <Route path="/login" element={<Login setRole={setRole} setSubrole={setSubrole} />} />
 
       {/*  Admin Routes */}
       {role === 'admin' && (
