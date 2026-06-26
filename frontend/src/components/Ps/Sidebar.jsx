@@ -15,6 +15,7 @@ import {
   FaChevronRight,
   FaExternalLinkAlt // <-- Icon Added Here
 } from "react-icons/fa";
+import Cookies from "js-cookie";
 
 const Sidebar = ({
   isMobileMenuOpen,

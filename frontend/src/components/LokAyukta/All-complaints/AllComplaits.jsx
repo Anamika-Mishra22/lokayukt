@@ -884,6 +884,8 @@
 
 import React, { useEffect, useState } from "react";
 import { IoSearchOutline } from "react-icons/io5";
+
+import Cookies from "js-cookie";
 import { useNavigate, useLocation } from "react-router-dom";
 import axios from "axios";
 import { useQuery } from "@tanstack/react-query";

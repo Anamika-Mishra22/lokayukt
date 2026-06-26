@@ -7,6 +7,7 @@ import { toast, Toaster } from "react-hot-toast";
 
 import "react-toastify/dist/ReactToastify.css";
 import axios from "axios";
+import Cookies from "js-cookie";
 
 const BASE_URL = import.meta.env.VITE_API_BASE ?? "http://localhost:8000/api";
 const subRole = Cookies.get("subRole");

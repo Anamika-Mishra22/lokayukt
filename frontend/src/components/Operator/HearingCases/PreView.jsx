@@ -1,6 +1,7 @@
 import React, { useRef, useMemo } from "react";
 import { FaPrint } from "react-icons/fa";
 import html2pdf from "html2pdf.js";
+import Cookies from "js-cookie";
 
 const PreView = ({ complaintData }) => {
   const contentRef = useRef(null);

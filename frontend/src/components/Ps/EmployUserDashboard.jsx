@@ -3,6 +3,7 @@ import { FaUserTie } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import { TbReport } from "react-icons/tb";
 import axios from 'axios';
+import Cookies from "js-cookie";
 
 // API Configuration
 const BASE_URL = import.meta.env.VITE_API_BASE ?? "http://localhost:8000/api";

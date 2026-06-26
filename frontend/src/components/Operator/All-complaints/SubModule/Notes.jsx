@@ -1,5 +1,6 @@
 import React from "react";
 import { CiLock } from "react-icons/ci";
+import Cookies from "js-cookie";
 
 const Notes = () => {
   return (

@@ -1,5 +1,6 @@
 // pages/SearchReports.js
 import React, { useState, useEffect } from "react";
+import Cookies from "js-cookie";
 import {
   FaSearch,
   FaDownload,

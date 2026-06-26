@@ -3,6 +3,7 @@ import axios from "axios";
 import React from "react";
 import { FaInfoCircle } from "react-icons/fa";
 import { useParams } from "react-router-dom";
+import Cookies from "js-cookie";
 
 
 

@@ -69,6 +69,8 @@
 import React from "react";
 import { CiLock } from "react-icons/ci";
 
+import Cookies from "js-cookie";
+
 // 1️⃣ Props destructure karo
 const FileDetails = ({ complaint }) => {
   return (
