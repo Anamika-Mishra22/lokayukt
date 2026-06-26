@@ -22,6 +22,7 @@ import { toast, Toaster } from "react-hot-toast";
 
 import * as XLSX from "xlsx-js-style";
 import { saveAs } from "file-saver";
+import Cookies from "js-cookie";
 
 const BASE_URL = import.meta.env.VITE_API_BASE ?? "http://localhost:8000/api";
 const token = Cookies.get("access_token");

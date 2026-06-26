@@ -19,6 +19,7 @@ import Notes from "./SubModule/Notes";
 import Documents from "./SubModule/Documents";
 import MovementHistory from "./SubModule/MovementHistory";
 import Fees from "./SubModule/Fees";
+import Cookies from "js-cookie";
 
 const BASE_URL = import.meta.env.VITE_API_BASE ?? "http://localhost:8000/api";
 const APP_URL = BASE_URL.replace("/api", "");

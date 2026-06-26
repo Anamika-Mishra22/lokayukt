@@ -9,6 +9,7 @@ import "react-toastify/dist/ReactToastify.css";
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { IoMdArrowBack } from "react-icons/io";
+import Cookies from "js-cookie";
 
 const BASE_URL = import.meta.env.VITE_API_BASE ?? "http://localhost:8000/api";
 

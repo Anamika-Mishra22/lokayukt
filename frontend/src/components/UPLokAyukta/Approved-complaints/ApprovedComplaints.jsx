@@ -10,6 +10,7 @@ import Pagination from "../../Pagination";
 
 import { krutiToUnicode } from "../../../components/utils/krutiToUnicode";
 import { unicodeToKrutiDev } from "../../../components/utils/unicodeToKruti";
+import Cookies from "js-cookie";
 
 
 const BASE_URL = import.meta.env.VITE_API_BASE ?? "http://localhost:8000/api";
