@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { toast, Toaster } from "react-hot-toast";
 import "react-toastify/dist/ReactToastify.css";
 import axios from "axios";
+import Cookies from "js-cookie";
 import Footer from './Footer';
 
 const BASE_URL = import.meta.env.VITE_API_BASE ?? "http://localhost:8000/api";
@@ -63,7 +64,7 @@ const Login = () => {
 
       if (response.data.status === 'success') {
         // Store authentication data in localStorage
-        Cookies.set('access_token', response.data.data.access_token);
+        Cookies.set('token', response.data.data.access_token);
         Cookies.set('user', JSON.stringify(response.data.data.user));
         Cookies.set('role', response.data.data.user.role.name);
         const userRole = response.data.data.user.role.name;
