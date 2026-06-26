@@ -13,7 +13,7 @@ import {
   FaBullseye,
   FaChartLine
 } from 'react-icons/fa';
-import Cookies from "js-cookie";
+// import Cookies from "js-cookie";
 
 import { 
   BarChart, 
