@@ -3,7 +3,7 @@ import axios from "axios";
 import React, { useState, useRef, useEffect } from "react";
 // import toast, { Toaster } from "react-hot-toast";
 import { toast, Toaster  } from "react-hot-toast";
-
+import Cookies from "js-cookie";
 import {
   FaFilePdf,
   FaTimes,

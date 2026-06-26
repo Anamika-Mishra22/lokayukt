@@ -1,4 +1,5 @@
 import axios from "axios";
+import Cookies from "js-cookie";
 import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { toast, Toaster } from "react-hot-toast";

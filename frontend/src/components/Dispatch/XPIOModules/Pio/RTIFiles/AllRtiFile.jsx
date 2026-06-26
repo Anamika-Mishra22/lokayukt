@@ -7,7 +7,7 @@ import {
 } from 'react-icons/fa';
 import toast from 'react-hot-toast';
 import Pagination from '../../../../Pagination';
-
+import Cookies from "js-cookie";
 import { FaPaperPlane } from "react-icons/fa";
 import { useNavigate } from 'react-router-dom';
 
