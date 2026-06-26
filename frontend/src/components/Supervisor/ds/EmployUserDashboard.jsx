@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { FaUserTie } from 'react-icons/fa';
 import { TbReport, TbMail } from "react-icons/tb";
 import { useNavigate } from 'react-router-dom';
+import Cookies from "js-cookie";
 import axios from 'axios';
 import { HiOutlineShieldCheck } from "react-icons/hi";
 import { toast, Toaster } from "react-hot-toast";

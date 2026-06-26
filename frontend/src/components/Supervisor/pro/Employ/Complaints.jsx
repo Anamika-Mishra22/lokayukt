@@ -15,6 +15,7 @@ import {
 } from 'react-icons/fa';
 // import { ToastContainer, toast } from "react-toastify";
 // import "react-toastify/dist/ReactToastify.css";
+import Cookies from "js-cookie";
 import { toast, Toaster  } from "react-hot-toast";
 
 import axios from "axios";

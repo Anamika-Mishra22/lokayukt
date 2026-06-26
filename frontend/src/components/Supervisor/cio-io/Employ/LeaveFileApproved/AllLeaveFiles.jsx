@@ -6,6 +6,7 @@ import {
   FaEye, FaSearch, FaSpinner, FaTimes, FaUser
 } from 'react-icons/fa';
 import toast from 'react-hot-toast';
+import Cookies from "js-cookie";
 import Pagination from '../../../../Pagination'; // Ensure this path is correct based on your folder structure
 
 const BASE_URL = import.meta.env.VITE_API_BASE ?? "http://localhost:8000/api";

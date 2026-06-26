@@ -8,6 +8,7 @@ import { FaDatabase } from "react-icons/fa";
 import { RiQrScanFill } from "react-icons/ri";
 import { TbReportSearch } from "react-icons/tb";
 import { FiClipboard } from "react-icons/fi";
+import Cookies from "js-cookie";
 
 import {
   FaHome,

@@ -9,6 +9,7 @@ import {
   FaTimes,
   FaSave
 } from 'react-icons/fa';
+import Cookies from "js-cookie";
 
 const FileAdministrator = () => {
   const [activeTab, setActiveTab] = useState('projects');

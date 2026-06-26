@@ -5,7 +5,8 @@ import {
   IoPaperPlaneOutline, 
   IoCheckmarkCircleOutline 
 } from 'react-icons/io5';
-import { useNavigate } from 'react-router-dom'; // <-- 1. Import kiya
+import { useNavigate } from 'react-router-dom';
+import Cookies from "js-cookie";
 
 // API Setup
 const BASE_URL = import.meta.env.VITE_API_BASE ?? "http://localhost:8000/api";

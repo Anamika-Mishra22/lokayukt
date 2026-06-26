@@ -10,6 +10,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import Documents from "./SubModule/Documents"; 
 import Notes from "./SubModule/Notes";
 import MovementHistory from "./SubModule/MovementHistory";
+import Cookies from "js-cookie";
 
 const BASE_URL = import.meta.env.VITE_API_BASE ?? "http://localhost:8000/api";
 const token = Cookies.get("access_token");

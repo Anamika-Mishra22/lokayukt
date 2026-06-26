@@ -6,6 +6,7 @@ import {
   FaEye, FaSearch, FaSpinner, FaTimes
 } from 'react-icons/fa';
 import Pagination from '../../../../Pagination';
+import Cookies from "js-cookie";
 import { useNavigate } from "react-router-dom";
 
 const BASE_URL = import.meta.env.VITE_API_BASE ?? "http://localhost:8000/api";

@@ -8,6 +8,7 @@ import { EditorState, convertToRaw, ContentState, Modifier } from "draft-js";
 import { Editor } from "react-draft-wysiwyg";
 import "react-draft-wysiwyg/dist/react-draft-wysiwyg.css";
 import draftToHtml from "draftjs-to-html";
+import Cookies from "js-cookie";
 import htmlToDraft from "html-to-draftjs";
 
 const BASE_URL = import.meta.env.VITE_API_BASE ?? "http://127.0.0.1:8000/api";

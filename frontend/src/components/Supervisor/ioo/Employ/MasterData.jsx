@@ -16,6 +16,7 @@ import {
 // import { ToastContainer, toast } from "react-toastify";
 // import "react-toastify/dist/ReactToastify.css";
 import { toast, Toaster } from "react-hot-toast";
+import Cookies from "js-cookie";
 
 
 // Import the separate Pagination component
