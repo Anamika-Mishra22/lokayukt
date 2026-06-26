@@ -688,6 +688,7 @@ import {
   FaSpinner,
   FaExclamationTriangle
 } from 'react-icons/fa';
+import Cookies from "js-cookie";
 
 const BASE_URL = import.meta.env.VITE_API_BASE ?? "http://localhost:8000/api";
 

@@ -4,6 +4,7 @@ import { AiOutlineHome } from "react-icons/ai";
 import { FiInbox, FiSend } from "react-icons/fi";
 import { FaHome, FaTimes } from "react-icons/fa";
 import { FiClipboard } from "react-icons/fi";
+import Cookies from "js-cookie";
 
 const Sidebar = ({
   isMobileMenuOpen,

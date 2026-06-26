@@ -16,6 +16,7 @@ import { IoFileTray } from "react-icons/io5";
 import { FaUserGroup, FaUserTie, FaClipboardUser } from "react-icons/fa6";
 import { MdContactPage } from "react-icons/md";
 import { FaFileSignature } from "react-icons/fa";
+import Cookies from "js-cookie";
 
 const Sidebar = ({ isMobileMenuOpen, toggleMobileMenu, isCollapsed }) => {
   const location = useLocation();
