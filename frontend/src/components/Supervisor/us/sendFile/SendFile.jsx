@@ -1,7 +1,7 @@
 import axios from 'axios';
 import React, { useState } from 'react';
 import { FiSearch, FiUploadCloud, FiLink, FiFileText } from 'react-icons/fi';
-
+import Cookies from "js-cookie";
 const BASE_URL = import.meta.env.VITE_API_BASE ?? "http://localhost:8000/api";
 const token = Cookies.get("access_token");
 
