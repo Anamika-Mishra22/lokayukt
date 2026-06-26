@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { IoSearchOutline } from "react-icons/io5";
 import { useNavigate, useLocation } from "react-router-dom";
 import axios from "axios";
+import Cookies from "js-cookie";
 import { useQuery } from "@tanstack/react-query";
 // import { ToastContainer, toast } from "react-toastify";
 import { toast, Toaster } from "react-hot-toast";

@@ -1,6 +1,7 @@
 // pages/MasterData.js
 import React, { useState, useCallback } from 'react';
 import axios from 'axios';
+import Cookies from "js-cookie";
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   FaPlus,

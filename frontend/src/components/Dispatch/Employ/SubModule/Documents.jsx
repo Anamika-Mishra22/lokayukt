@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { FaEye, FaTimes, FaSpinner, FaCloudUploadAlt, FaFileAlt, FaPrint } from "react-icons/fa";
 import { BsFileEarmarkPdf } from "react-icons/bs";
 import axios from "axios";
+import Cookies from "js-cookie";
 import { useQuery } from "@tanstack/react-query";
 import { toast, Toaster } from "react-hot-toast";
 import Pagination from "../../../Pagination";

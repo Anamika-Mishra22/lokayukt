@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { FaSearch, FaSpinner, FaPaperPlane, FaTimes } from "react-icons/fa";
 import axios from "axios";
+import Cookies from "js-cookie";
 import toast, { Toaster } from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";

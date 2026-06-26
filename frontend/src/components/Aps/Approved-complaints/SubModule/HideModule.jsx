@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
+import Cookies from "js-cookie";
 import React from "react";
 import { FaInfoCircle } from "react-icons/fa";
 import { useParams } from "react-router-dom";
