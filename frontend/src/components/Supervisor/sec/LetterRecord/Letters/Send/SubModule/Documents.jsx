@@ -4,6 +4,7 @@ import { FaArrowUpLong, FaFilePdf } from "react-icons/fa6";
 import { FaTimes, FaEye } from "react-icons/fa";
 import { FiUpload } from "react-icons/fi";
 import axios from "axios";
+import Cookies from "js-cookie";
 import { toast, Toaster } from "react-hot-toast";
 import "react-toastify/dist/ReactToastify.css";
 import Pagination from "../../../../../../Pagination"; 

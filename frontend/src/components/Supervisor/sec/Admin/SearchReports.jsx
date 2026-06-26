@@ -15,6 +15,7 @@ import {
   FaTimes
 } from "react-icons/fa";
 import axios from "axios";
+import Cookies from "js-cookie";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import Pagination from '../../../Pagination';
