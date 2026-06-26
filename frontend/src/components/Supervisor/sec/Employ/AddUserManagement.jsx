@@ -16,6 +16,7 @@ import {
 import { toast, Toaster } from "react-hot-toast";
 
 import axios from "axios";
+import Cookies from "js-cookie";
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 const BASE_URL = import.meta.env.VITE_API_BASE ?? "http://localhost:8000/api";

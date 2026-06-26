@@ -23,6 +23,7 @@ import {
   FaPlus,
   FaTrash,
 } from "react-icons/fa";
+import Cookies from "js-cookie";
 import { FaRegEdit } from "react-icons/fa";
 import { IoMdArrowBack } from "react-icons/io";
 import { toast, ToastContainer } from "react-toastify";

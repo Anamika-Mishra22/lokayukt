@@ -15,6 +15,7 @@ import { IoFileTray } from "react-icons/io5";
 import { FaFileSignature } from "react-icons/fa6";
 import { RiFileSearchLine } from "react-icons/ri";
 import { TbFileSearch } from "react-icons/tb";
+import Cookies from "js-cookie";
 import { MdOutlinePendingActions } from "react-icons/md";
 
 const Sidebar = ({ isMobileMenuOpen, toggleMobileMenu, isCollapsed }) => {

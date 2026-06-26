@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Outlet } from 'react-router-dom';
 import Sidebar from "./Sidebar"
 import Header from './Header';
+import Cookies from "js-cookie";
 import Footer from '../../Footer';
 
 

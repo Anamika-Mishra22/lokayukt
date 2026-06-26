@@ -5,6 +5,7 @@ import { FaBars, FaSignOutAlt, FaSpinner } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import { toast, Toaster } from "react-hot-toast";
 import axios from "axios";
+import Cookies from "js-cookie";
 
 const BASE_URL = import.meta.env.VITE_API_BASE ?? "http://localhost:8000/api";
 

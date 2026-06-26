@@ -6,6 +6,7 @@ import {
   IoCheckmarkCircleOutline, 
 } from "react-icons/io5";
 import { toast, Toaster } from "react-hot-toast";
+import Cookies from "js-cookie";
 import { useNavigate } from "react-router-dom";
 
 const BASE_URL = import.meta.env.VITE_API_BASE ?? "http://localhost:8000/api";

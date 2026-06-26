@@ -11,6 +11,7 @@ import {
   FaCalendarAlt,
 } from "react-icons/fa";
 import { FaRegFileAlt } from "react-icons/fa";
+import Cookies from "js-cookie";
 import { IoTimeOutline } from "react-icons/io5";
 
 import Pagination from "../Pagination";

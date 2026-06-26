@@ -5,7 +5,7 @@ import { MdOutlineAdminPanelSettings } from "react-icons/md";
 import { useNavigate } from 'react-router-dom';
 import { HiOutlineShieldCheck } from "react-icons/hi";
 import axios from 'axios';
-
+import Cookies from "js-cookie";
 // --- Axios Instance Setup ---
 const BASE_URL = import.meta.env.VITE_API_BASE ?? "http://localhost:8000/api";
 const token = Cookies.get("access_token");

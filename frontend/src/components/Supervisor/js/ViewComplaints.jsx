@@ -25,6 +25,7 @@ import {
 } from "react-icons/fa";
 import { FaRegEdit } from "react-icons/fa";
 import { IoMdArrowBack } from "react-icons/io";
+import Cookies from "js-cookie";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 

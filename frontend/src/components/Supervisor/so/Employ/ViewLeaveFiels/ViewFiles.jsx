@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import axios from 'axios';
+import Cookies from "js-cookie";
 import React, { useState, useMemo } from 'react';
 import { FaFilePdf, FaFileWord, FaFileImage, FaFileExcel, FaEye, FaSearch, FaSpinner, FaTimes } from 'react-icons/fa';
 import toast from 'react-hot-toast';

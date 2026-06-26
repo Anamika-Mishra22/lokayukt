@@ -22,6 +22,7 @@ import { FaEye, FaEyeSlash } from "react-icons/fa";
 
 
 import axios from "axios";
+import Cookies from "js-cookie";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 

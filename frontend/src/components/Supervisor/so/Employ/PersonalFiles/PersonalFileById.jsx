@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import axios from 'axios';
+import Cookies from "js-cookie";
 import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { IoMdArrowBack } from "react-icons/io";

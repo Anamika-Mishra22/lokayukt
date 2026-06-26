@@ -6,6 +6,7 @@ import { IoMdArrowBack } from "react-icons/io";
 import { FiSend } from "react-icons/fi";
 import { toast, Toaster } from "react-hot-toast";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import Cookies from "js-cookie";
 
 import Documents from "./SubModule/Documents"; 
 import Notes from "./SubModule/Notes";

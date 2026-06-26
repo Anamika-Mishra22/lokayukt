@@ -4,6 +4,7 @@ import axios from "axios";
 import { FaExclamationTriangle, FaTimes, FaSpinner } from "react-icons/fa";
 import { IoMdArrowBack } from "react-icons/io";
 import { FiSend } from "react-icons/fi";
+import Cookies from "js-cookie";
 import { toast, Toaster } from "react-hot-toast";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
