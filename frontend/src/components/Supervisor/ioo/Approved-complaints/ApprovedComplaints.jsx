@@ -6,6 +6,7 @@ import { useQuery } from "@tanstack/react-query";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { IoMdTime } from "react-icons/io";
+import Cookies from "js-cookie";
 
 import { krutiToUnicode } from "../../../utils/krutiToUnicode";
 import { unicodeToKrutiDev } from "../../../utils/unicodeToKruti";

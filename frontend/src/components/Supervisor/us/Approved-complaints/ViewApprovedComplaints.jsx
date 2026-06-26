@@ -12,6 +12,7 @@ import { IoMdArrowBack } from "react-icons/io";
 // import { toast, ToastContainer } from "react-toastify";
 // import "react-toastify/dist/ReactToastify.css";
 import { toast, Toaster } from "react-hot-toast";
+import Cookies from "js-cookie";
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import Notes from "./SubModule/Notes";

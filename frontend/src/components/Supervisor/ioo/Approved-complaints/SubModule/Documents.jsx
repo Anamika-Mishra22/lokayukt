@@ -4,6 +4,7 @@ import { BsFileEarmarkPdf } from "react-icons/bs";
 import axios from "axios";
 import { useQuery } from "@tanstack/react-query";
 // import { toast } from "react-toastify";
+import Cookies from "js-cookie";
 
 import { toast, Toaster } from "react-hot-toast";
 

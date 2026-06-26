@@ -5,6 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 import { toast, Toaster } from "react-hot-toast";
 
 const BASE_URL = import.meta.env.VITE_API_BASE ?? "http://127.0.0.1:8000/api";
+import Cookies from "js-cookie";
 const token = Cookies.get("access_token");
 
 const api = axios.create({

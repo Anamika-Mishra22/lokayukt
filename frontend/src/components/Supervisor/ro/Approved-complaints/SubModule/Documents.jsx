@@ -6,6 +6,7 @@ import { useQuery } from "@tanstack/react-query";
 // import { toast } from "react-toastify";
 import { toast, Toaster } from "react-hot-toast";
 import Pagination from "../../../../Pagination";
+import Cookies from "js-cookie";
 
 
 

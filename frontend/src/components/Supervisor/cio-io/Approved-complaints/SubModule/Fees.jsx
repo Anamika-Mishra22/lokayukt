@@ -5,6 +5,7 @@ import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { FaCheckCircle } from "react-icons/fa";
 const BASE_URL = import.meta.env.VITE_API_BASE ?? "http://localhost:8000/api";
+import Cookies from "js-cookie";
 const token = Cookies.get("access_token");
 const api = axios.create({
   baseURL: BASE_URL,

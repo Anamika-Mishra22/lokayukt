@@ -5,7 +5,7 @@ import { FaFileAlt, FaExclamationTriangle, FaTimes, FaEye,FaChevronDown } from "
 import { IoMdArrowBack } from "react-icons/io";
 // import { toast, ToastContainer } from "react-toastify";
 import { toast, Toaster } from "react-hot-toast";
-import Cookies from "js-cookie";
+
 
 // import "react-toastify/dist/ReactToastify.css";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -13,6 +13,7 @@ import Notes from "./SubModule/Notes";
 import Documents from "./SubModule/Documents";
 import MovementHistory from "./SubModule/MovementHistory";
 import Fees from "./SubModule/Fees";
+import Cookies from "js-cookie";
 
 const BASE_URL = import.meta.env.VITE_API_BASE ?? "http://localhost:8000/api";
 const APP_URL = BASE_URL.replace("/api", "");

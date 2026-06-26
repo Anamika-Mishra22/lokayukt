@@ -12,6 +12,7 @@ import draftToHtml from "draftjs-to-html";
 import htmlToDraft from "html-to-draftjs";
 import Cookies from "js-cookie";
 
+
 const BASE_URL = import.meta.env.VITE_API_BASE ?? "http://127.0.0.1:8000/api";
 const token = Cookies.get("access_token");
 const name = Cookies.get("name");

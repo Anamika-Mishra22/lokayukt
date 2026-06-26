@@ -4,6 +4,7 @@ import { FiBell, FiHelpCircle, FiChevronDown, FiLayers, FiLock } from "react-ico
 import { FaBars, FaSignOutAlt, FaSpinner } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import { toast, Toaster } from "react-hot-toast";
+import Cookies from "js-cookie";
 
 import "react-toastify/dist/ReactToastify.css";
 import axios from "axios";
