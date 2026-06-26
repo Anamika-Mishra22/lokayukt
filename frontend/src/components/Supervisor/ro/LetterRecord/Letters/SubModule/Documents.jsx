@@ -6,6 +6,7 @@ import { FiUpload } from "react-icons/fi";
 import axios from "axios";
 import { toast, Toaster } from "react-hot-toast";
 import "react-toastify/dist/ReactToastify.css";
+import Cookies from "js-cookie";
 import Pagination from "../../../../../Pagination"; 
 
 const BASE_URL = import.meta.env.VITE_API_BASE ?? "http://localhost:8000/api";

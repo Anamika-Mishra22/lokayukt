@@ -4,6 +4,7 @@ import React, { useState, useMemo } from 'react';
 import { FaFilePdf, FaFileWord, FaFileImage, FaFileExcel, FaEye, FaSearch, FaSpinner, FaTimes } from 'react-icons/fa';
 import toast from 'react-hot-toast';
 import Pagination from '../../../../Pagination';
+import Cookies from "js-cookie";
 import { useNavigate } from 'react-router-dom';
 
 

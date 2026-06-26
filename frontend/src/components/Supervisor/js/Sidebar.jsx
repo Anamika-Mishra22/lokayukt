@@ -7,6 +7,7 @@ import { HiMiniUsers } from "react-icons/hi2";
 import { FaDatabase } from "react-icons/fa";
 import { RiQrScanFill } from "react-icons/ri";
 import { TbReportSearch } from "react-icons/tb";
+import Cookies from "js-cookie";
 import { FiClipboard } from "react-icons/fi";
 
 import {

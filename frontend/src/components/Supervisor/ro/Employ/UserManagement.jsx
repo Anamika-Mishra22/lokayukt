@@ -13,6 +13,7 @@ import {
   FaDownload
 } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
+import Cookies from "js-cookie";
 import axios from 'axios';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import Pagination from '../../../Pagination';

@@ -4,6 +4,7 @@ import { Link, useLocation } from "react-router-dom";
 import { TbMail } from "react-icons/tb"; // Letter Record ke liye icon
 import { FaHome, FaTimes } from "react-icons/fa";
 import { FiInbox, FiSend, FiFileText, FiBarChart2, FiSearch } from "react-icons/fi";
+import Cookies from "js-cookie";
 
 
 const Sidebar = ({

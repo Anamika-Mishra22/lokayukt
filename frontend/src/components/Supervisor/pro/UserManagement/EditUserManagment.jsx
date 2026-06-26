@@ -12,6 +12,7 @@ import {
   FaEdit,
 } from "react-icons/fa";
 import { toast, Toaster } from "react-hot-toast";
+import Cookies from "js-cookie";
 import { useQueryClient } from "@tanstack/react-query";
 
 

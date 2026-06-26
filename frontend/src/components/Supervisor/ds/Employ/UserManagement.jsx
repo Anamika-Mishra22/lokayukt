@@ -19,6 +19,7 @@ import Pagination from '../../../Pagination';
 // import { ToastContainer, toast } from "react-toastify";
 // import "react-toastify/dist/ReactToastify.css";
 import { toast, Toaster } from "react-hot-toast";
+import Cookies from "js-cookie";
 
 import * as XLSX from "xlsx-js-style";
 import { saveAs } from "file-saver";

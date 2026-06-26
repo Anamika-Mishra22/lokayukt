@@ -1,4 +1,5 @@
 import React from "react";
+import Cookies from "js-cookie";
 
 const MovementHistory = ({ complaint }) => {
   const actions = complaint?.actions || [];

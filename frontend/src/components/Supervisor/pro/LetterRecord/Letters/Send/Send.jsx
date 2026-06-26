@@ -5,6 +5,7 @@ import {
   IoPaperPlaneOutline, 
   IoCheckmarkCircleOutline 
 } from 'react-icons/io5';
+import Cookies from "js-cookie";
 import { useNavigate } from 'react-router-dom'; // <-- 1. Import kiya
 
 // API Setup

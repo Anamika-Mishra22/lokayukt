@@ -5,6 +5,7 @@ import { FaExclamationTriangle, FaTimes, FaSpinner } from "react-icons/fa";
 import { IoMdArrowBack, IoMdArrowDropdown } from "react-icons/io";
 import { FiSend } from "react-icons/fi";
 import { toast, Toaster } from "react-hot-toast";
+import Cookies from "js-cookie";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 import Documents from "../SubModule/Documents"; 

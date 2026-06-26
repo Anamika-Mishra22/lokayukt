@@ -4,6 +4,7 @@ import { TbReport, TbMail } from "react-icons/tb";
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { HiOutlineShieldCheck } from "react-icons/hi";
+import Cookies from "js-cookie";
 import { toast, Toaster } from "react-hot-toast";
 
 const BASE_URL = import.meta.env.VITE_API_BASE ?? "http://localhost:8000/api";
