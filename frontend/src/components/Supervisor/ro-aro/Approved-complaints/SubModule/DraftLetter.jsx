@@ -16,6 +16,8 @@ import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
 import EditDraft from "./EditDraft";
 import Pagination from "../../../../Pagination";
+import Cookies from "js-cookie";
+
 
 const BASE_URL = import.meta.env.VITE_API_BASE ?? "http://127.0.0.1:8000/api";
 const token = Cookies.get("access_token");

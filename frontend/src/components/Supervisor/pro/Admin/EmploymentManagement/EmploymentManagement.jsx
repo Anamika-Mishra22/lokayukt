@@ -14,6 +14,8 @@ import {
 } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import Cookies from "js-cookie";
+
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import Pagination from '../../../../Pagination';
 // import { ToastContainer, toast } from "react-toastify";

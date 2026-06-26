@@ -16,6 +16,8 @@ import {
 // import { ToastContainer, toast } from "react-toastify";
 // import "react-toastify/dist/ReactToastify.css";
 import { toast, Toaster  } from "react-hot-toast";
+import Cookies from "js-cookie";
+
 
 import axios from "axios";
 import { useNavigate } from 'react-router-dom';

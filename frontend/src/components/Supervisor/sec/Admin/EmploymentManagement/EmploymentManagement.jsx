@@ -1,5 +1,7 @@
 // pages/EmploymentManagement.js
 import React, { useState } from 'react';
+import Cookies from "js-cookie";
+
 import {
   FaUserPlus,
   FaUser as FaUserIcon,

@@ -6,6 +6,7 @@ import { useQuery } from "@tanstack/react-query";
 import { toast, Toaster } from "react-hot-toast";
 import { RiEditBoxLine } from "react-icons/ri";
 import { Modifier } from "draft-js";
+import Cookies from "js-cookie";
 
 // Import Editor components
 import { EditorState, convertToRaw } from "draft-js";

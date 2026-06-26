@@ -5,6 +5,7 @@ import { FaFileAlt, FaExclamationTriangle, FaTimes, FaEye,FaChevronDown } from "
 import { IoMdArrowBack } from "react-icons/io";
 // import { toast, ToastContainer } from "react-toastify";
 import { toast, Toaster } from "react-hot-toast";
+import Cookies from "js-cookie";
 
 // import "react-toastify/dist/ReactToastify.css";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";

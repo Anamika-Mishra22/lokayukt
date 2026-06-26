@@ -3,6 +3,8 @@ import React, { useState } from "react";
 import { useParams } from "react-router-dom";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import Cookies from "js-cookie";
+
 import { FaCheckCircle } from "react-icons/fa";
 const BASE_URL = import.meta.env.VITE_API_BASE ?? "http://localhost:8000/api";
 const token = Cookies.get("access_token");

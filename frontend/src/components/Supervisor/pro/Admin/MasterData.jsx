@@ -1,6 +1,8 @@
 // pages/MasterData.js
 import React, { useState, useCallback } from 'react';
 import axios from 'axios';
+import Cookies from "js-cookie";
+
 import {
   FaPlus,
   FaEdit,

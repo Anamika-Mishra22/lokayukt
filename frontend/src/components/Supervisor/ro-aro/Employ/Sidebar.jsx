@@ -16,6 +16,8 @@ import { FaFileSignature } from "react-icons/fa6";
 import { RiFileSearchLine } from "react-icons/ri";
 import { TbFileSearch } from "react-icons/tb";
 import { MdOutlinePendingActions } from "react-icons/md";
+import Cookies from "js-cookie";
+
 
 const Sidebar = ({ isMobileMenuOpen, toggleMobileMenu, isCollapsed }) => {
 

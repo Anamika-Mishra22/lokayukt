@@ -13,6 +13,7 @@ import {
 } from "react-icons/fa";
 import { toast, Toaster } from "react-hot-toast";
 import { useQueryClient } from "@tanstack/react-query";
+import Cookies from "js-cookie";
 
 
 // import { ToastContainer, toast } from "react-toastify";

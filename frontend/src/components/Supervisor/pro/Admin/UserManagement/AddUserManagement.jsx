@@ -16,6 +16,7 @@ import {
 import { toast, Toaster } from "react-hot-toast";
 import { useQueryClient } from '@tanstack/react-query';
 import { FaEye, FaEyeSlash } from "react-icons/fa";
+import Cookies from "js-cookie";
 
 
 
