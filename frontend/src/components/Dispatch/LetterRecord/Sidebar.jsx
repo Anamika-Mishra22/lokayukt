@@ -8,6 +8,7 @@ import { RiQrScanFill } from "react-icons/ri";
 import { FaHome, FaTimes } from "react-icons/fa";
 import { FiInbox, FiSend, FiFileText, FiBarChart2, FiSearch } from "react-icons/fi";
 import { MdNoteAdd } from "react-icons/md";
+import Cookies from "js-cookie";
 
 
 const Sidebar = ({
