@@ -1030,16 +1030,21 @@ setTimeout(() => {
     });
   };
 
-  const handleFileChange = (fieldName, file) => {
-    setFormData({ ...formData, [fieldName]: file });
+ const handleFileChange = (fieldName, file) => {
+  if (file && file.type !== "application/pdf") {
+    toast.error("Please upload a PDF file only.");
+    return;
+  }
 
-    if (errors[fieldName] || (fieldName === 'attachedDocumentsFile' && errors.attached_documents)) {
-      const newErrors = { ...errors };
-      delete newErrors[fieldName];
-      if (fieldName === 'attachedDocumentsFile') delete newErrors.attached_documents;
-      setErrors(newErrors);
-    }
-  };
+  setFormData({ ...formData, [fieldName]: file });
+
+  if (errors[fieldName] || (fieldName === 'attachedDocumentsFile' && errors.attached_documents)) {
+    const newErrors = { ...errors };
+    delete newErrors[fieldName];
+    if (fieldName === 'attachedDocumentsFile') delete newErrors.attached_documents;
+    setErrors(newErrors);
+  }
+};
 
   const handleFormDataChange = (field, value) => {
     setFormData({ ...formData, [field]: value });
@@ -1825,7 +1830,7 @@ complainants.forEach((c, index) => {
     e.target.files[0]
   )
 }
-                  accept=".pdf,.jpg,.jpeg,.png"
+                  accept=".pdf"
                 />
               </label>
               <span className="text-gray-500 text-sm truncate">
@@ -2574,7 +2579,7 @@ complainants.forEach((c, index) => {
                         type="file"
                         className="hidden"
                         onChange={(e) => handleFileChange('challanFile', e.target.files[0])}
-                        accept=".pdf,.jpg,.jpeg,.png"
+                        accept=".pdf"
                     />
                     </label>
                     <span className="text-gray-500 text-sm">
@@ -2813,7 +2818,7 @@ complainants.forEach((c, index) => {
                   type="file"
                   className="hidden"
                   onChange={(e) => handleFileChange('attachedDocumentsFile', e.target.files[0])}
-                  accept=".pdf,.jpg,.jpeg,.png"
+                  accept=".pdf"
                 />
               </label>
 

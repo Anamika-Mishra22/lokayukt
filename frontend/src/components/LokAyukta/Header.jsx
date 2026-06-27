@@ -107,11 +107,16 @@ const Header = ({ toggleMobileMenu }) => {
         toast.success('Logout Successfully');
         
         timeoutRef.current = setTimeout(() => {
-          Cookies.clear();
-          Cookies.remove('access_token');
-          Cookies.remove('user');
-          Cookies.remove('role'); 
-          Cookies.remove('subrole'); 
+          Cookies.remove("access_token");
+Cookies.remove("user");
+Cookies.remove("role");
+Cookies.remove("subrole");
+Cookies.remove("subroleName");
+Cookies.remove("UserID");
+Cookies.remove("name");
+Cookies.remove("id");
+Cookies.remove("subRole");
+Cookies.remove("subrole_lable");
           window.open("/login", "_self");
         }, 1500);
        

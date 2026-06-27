@@ -64,7 +64,7 @@ const Login = () => {
 
       if (response.data.status === 'success') {
         // Store authentication data in localStorage
-        Cookies.set('token', response.data.data.access_token);
+        Cookies.set('access_token', response.data.data.access_token);
         Cookies.set('user', JSON.stringify(response.data.data.user));
         Cookies.set('role', response.data.data.user.role.name);
         const userRole = response.data.data.user.role.name;
@@ -286,7 +286,11 @@ const Login = () => {
                   type="text"
                   name="user_name"
                   value={formData.user_name}
-                  onChange={handleInputChange}
+                   onChange={handleInputChange}
+                  onCopy={(e) => e.preventDefault()}
+                  onCut={(e) => e.preventDefault()}
+                  onPaste={(e) => e.preventDefault()}
+                  onContextMenu={(e) => e.preventDefault()}
                   className={`w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all ${
                     errors.user_name ? 'border-red-500' : 'border-gray-300'
                   }`}
@@ -327,6 +331,10 @@ const Login = () => {
     name="password"
     value={formData.password}
     onChange={handleInputChange}
+    onCopy={(e) => e.preventDefault()}
+    onCut={(e) => e.preventDefault()}
+    onPaste={(e) => e.preventDefault()}
+    onContextMenu={(e) => e.preventDefault()}
     className={`no-browser-eye w-full pl-10 pr-10 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all ${
       errors.password || generalError ? "border-red-500" : "border-gray-300"
     }`}
