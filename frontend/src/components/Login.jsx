@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { FaUser, FaLock, FaBalanceScale, FaSpinner, FaExclamationTriangle } from 'react-icons/fa';
 import { FaEye, FaEyeSlash } from "react-icons/fa";
 import { useNavigate } from 'react-router-dom';
@@ -6,6 +6,7 @@ import { toast, Toaster } from "react-hot-toast";
 import "react-toastify/dist/ReactToastify.css";
 import axios from "axios";
 import Cookies from "js-cookie";
+import { FaSyncAlt } from "react-icons/fa";
 import Footer from './Footer';
 
 const BASE_URL = import.meta.env.VITE_API_BASE ?? "http://localhost:8000/api";
@@ -18,10 +19,36 @@ const Login = () => {
   const [errors, setErrors] = useState({});
   const [generalError, setGeneralError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [formData, setFormData] = useState({
-    user_name: '',
-    password: ''
-  });
+  const [captchaLoading, setCaptchaLoading] = useState(false);
+const [formData, setFormData] = useState({
+  user_name: "",
+  password: "",
+  captcha: ""
+});
+
+const [captchaText, setCaptchaText] = useState("");
+
+const getCaptcha = async () => {
+  try {
+    setCaptchaLoading(true);
+
+    const res = await axios.get(
+      "https://demo2.techsseract.com/lokayukt/backend/public/api/captcha"
+    );
+
+    if (res.data.status === "success") {
+      setCaptchaText(res.data.captcha);
+    }
+  } catch (err) {
+    console.log(err);
+  } finally {
+    setCaptchaLoading(false);
+  }
+};
+
+useEffect(() => {
+  getCaptcha();
+}, []);
 
   const handleInputChange = (e) => {
     setFormData({
@@ -56,7 +83,12 @@ const Login = () => {
       // console.log("MAC:", macAddress);
 
 
-      const response = await loginApi.post('/login', formData);
+      // const response = await loginApi.post('/login', formData);
+      const response = await loginApi.post("/login", {
+  user_name: btoa(formData.user_name),
+  password: btoa(formData.password),
+  captcha: btoa(formData.captcha),
+});
       // const response = await loginApi.post('/login', {
       //   ...formData,
       //   mac: macAddress
@@ -367,6 +399,40 @@ const Login = () => {
                 </p>
               )}
             </div>
+
+   <div>
+  <label className="block text-gray-700 text-sm font-medium mb-2">
+    Captcha
+  </label>
+
+  <div className="flex items-center gap-2">
+    {/* Captcha */}
+    <div className="w-28 h-11 bg-gray-200 rounded-lg flex items-center justify-center font-bold tracking-widest select-none">
+      {captchaText}
+    </div>
+
+    {/* Input */}
+    <input
+      type="text"
+      name="captcha"
+      value={formData.captcha}
+      onChange={handleInputChange}
+      placeholder="Enter Captcha"
+      className="flex-1 h-11 border rounded-lg px-3 outline-none focus:ring-2 focus:ring-blue-500"
+    />
+
+    {/* Refresh */}
+    <button
+      type="button"
+      onClick={getCaptcha}
+      className="w-11 h-11 rounded-lg border flex items-center justify-center hover:bg-gray-100"
+    >
+      <FaSyncAlt
+  className={`${captchaLoading ? "animate-spin" : ""}`}
+/>
+    </button>
+  </div>
+</div>
 
             {/* Login Button */}
             <button
