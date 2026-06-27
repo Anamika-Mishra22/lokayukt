@@ -407,9 +407,7 @@ useEffect(() => {
 
   <div className="flex items-center gap-2">
     {/* Captcha */}
-    <div className="w-28 h-11 bg-gray-200 rounded-lg flex items-center justify-center font-bold tracking-widest select-none">
-      {captchaText}
-    </div>
+   
 
     {/* Input */}
     <input
@@ -420,6 +418,11 @@ useEffect(() => {
       placeholder="Enter Captcha"
       className="flex-1 h-11 border rounded-lg px-3 outline-none focus:ring-2 focus:ring-blue-500"
     />
+
+
+     <div className="w-28 h-11 bg-gray-200 rounded-lg flex items-center justify-center font-bold tracking-widest select-none">
+      {captchaText}
+    </div>
 
     {/* Refresh */}
     <button
